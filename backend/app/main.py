@@ -11,14 +11,20 @@ app = FastAPI(
     debug=settings.DEBUG
 )
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Configure CORS with environment-specific settings
+cors_config = dict(
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+    allow_headers=settings.CORS_ALLOW_HEADERS,
 )
+
+# Use regex pattern for development, strict list for production
+if settings.cors_allow_origin_regex:
+    cors_config["allow_origin_regex"] = settings.cors_allow_origin_regex
+else:
+    cors_config["allow_origins"] = settings.allowed_origins
+
+app.add_middleware(CORSMiddleware, **cors_config)
 
 # Include API routes
 app.include_router(api_router)

@@ -37,16 +37,16 @@ def build_health_analysis_graph() -> StateGraph:
         """Health report generation node."""
         return await report_agent.execute(state)
 
-    workflow.add_node("symptom_analysis", symptom_node)
-    workflow.add_node("risk_assessment", risk_node)
-    workflow.add_node("specialist_recommendation", specialist_node)
-    workflow.add_node("health_report", report_node)
+    workflow.add_node("symptom_agent", symptom_node)
+    workflow.add_node("risk_agent", risk_node)
+    workflow.add_node("specialist_agent", specialist_node)
+    workflow.add_node("report_agent", report_node)
 
-    workflow.set_entry_point("symptom_analysis")
-    workflow.add_edge("symptom_analysis", "risk_assessment")
-    workflow.add_edge("risk_assessment", "specialist_recommendation")
-    workflow.add_edge("specialist_recommendation", "health_report")
-    workflow.set_finish_point("health_report")
+    workflow.set_entry_point("symptom_agent")
+    workflow.add_edge("symptom_agent", "risk_agent")
+    workflow.add_edge("risk_agent", "specialist_agent")
+    workflow.add_edge("specialist_agent", "report_agent")
+    workflow.set_finish_point("report_agent")
 
     return workflow
 

@@ -37,29 +37,29 @@ class HealthGraph:
                 "label": "User Input",
                 "description": "Patient symptoms and medical history",
             },
-            "symptom_analysis": {
-                "id": "symptom_analysis",
+            "symptom_agent": {
+                "id": "symptom_agent",
                 "type": "agent",
                 "label": "Symptom Analysis",
                 "description": "SymptomAgent - Analyzes reported symptoms",
                 "agent": "SymptomAgent",
             },
-            "risk_assessment": {
-                "id": "risk_assessment",
+            "risk_agent": {
+                "id": "risk_agent",
                 "type": "agent",
                 "label": "Risk Assessment",
                 "description": "RiskAgent - Evaluates health risk level",
                 "agent": "RiskAgent",
             },
-            "specialist_recommendation": {
-                "id": "specialist_recommendation",
+            "specialist_agent": {
+                "id": "specialist_agent",
                 "type": "agent",
                 "label": "Specialist Recommendation",
                 "description": "SpecialistAgent - Recommends specialist type",
                 "agent": "SpecialistAgent",
             },
-            "health_report": {
-                "id": "health_report",
+            "report_agent": {
+                "id": "report_agent",
                 "type": "agent",
                 "label": "Health Report",
                 "description": "ReportAgent - Generates comprehensive health report",
@@ -76,11 +76,11 @@ class HealthGraph:
     def _initialize_edges(self) -> List[Dict[str, str]]:
         """Initialize workflow edges."""
         return [
-            {"from": "input", "to": "symptom_analysis", "label": "start"},
-            {"from": "symptom_analysis", "to": "risk_assessment", "label": "analyze"},
-            {"from": "risk_assessment", "to": "specialist_recommendation", "label": "assess"},
-            {"from": "specialist_recommendation", "to": "health_report", "label": "recommend"},
-            {"from": "health_report", "to": "output", "label": "complete"},
+            {"from": "input", "to": "symptom_agent", "label": "start"},
+            {"from": "symptom_agent", "to": "risk_agent", "label": "analyze"},
+            {"from": "risk_agent", "to": "specialist_agent", "label": "assess"},
+            {"from": "specialist_agent", "to": "report_agent", "label": "recommend"},
+            {"from": "report_agent", "to": "output", "label": "complete"},
         ]
 
     def add_node(self, node_id: str, node_type: str, data: Dict[str, Any] = None) -> None:
@@ -102,10 +102,10 @@ class HealthGraph:
     def get_workflow_sequence(self) -> List[str]:
         """Get sequence of agent nodes for workflow execution."""
         return [
-            "symptom_analysis",
-            "risk_assessment",
-            "specialist_recommendation",
-            "health_report",
+            "symptom_agent",
+            "risk_agent",
+            "specialist_agent",
+            "report_agent",
         ]
 
     def to_dict(self) -> Dict[str, Any]:
