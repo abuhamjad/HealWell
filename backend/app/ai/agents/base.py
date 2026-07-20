@@ -1,7 +1,7 @@
 """Base agent abstract class."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 
 class BaseAgent(ABC):
@@ -10,21 +10,8 @@ class BaseAgent(ABC):
     def __init__(self, name: str):
         """Initialize agent with name."""
         self.name = name
-        self.state = {}
 
     @abstractmethod
-    async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute agent logic."""
+    async def execute(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Execute agent logic with shared workflow state."""
         pass
-
-    def set_state(self, key: str, value: Any) -> None:
-        """Set agent state."""
-        self.state[key] = value
-
-    def get_state(self, key: str, default: Any = None) -> Any:
-        """Get agent state."""
-        return self.state.get(key, default)
-
-    def reset_state(self) -> None:
-        """Reset agent state."""
-        self.state = {}

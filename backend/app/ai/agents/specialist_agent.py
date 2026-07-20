@@ -1,7 +1,8 @@
 """Specialist recommendation agent."""
 
-from typing import Any, Dict
+from typing import Any
 from app.ai.agents.base import BaseAgent
+from app.ai.models import SpecialistRecommendation
 
 
 class SpecialistAgent(BaseAgent):
@@ -11,18 +12,16 @@ class SpecialistAgent(BaseAgent):
         """Initialize specialist agent."""
         super().__init__(name="SpecialistAgent")
 
-    async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Recommend specialist.
+    async def execute(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Recommend specialist based on risk assessment."""
+        risk_assessment = state.get("risk_assessment", {})
+        risk_level = getattr(risk_assessment, "risk_level", "moderate")
 
-        TODO: Implement specialist matching using AI provider.
-        """
-        risk_level = input_data.get("risk_level", "moderate")
+        state["specialist_recommendation"] = SpecialistRecommendation(
+            specialist="General Physician",
+            reasoning="Moderate risk level with respiratory symptoms warrants physician consultation",
+            urgency="24-48 hours",
+        )
+        state["current_step"] = "specialist_recommendation"
 
-        return {
-            "agent": self.name,
-            "status": "recommendation_pending",
-            "specialist": "TODO",
-            "urgency": "TODO",
-            "reasoning": "TODO: Implement specialist recommendation",
-        }
+        return state

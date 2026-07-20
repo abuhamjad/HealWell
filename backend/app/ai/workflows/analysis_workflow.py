@@ -1,67 +1,46 @@
-"""Health analysis workflow orchestration."""
+"""Health analysis workflow orchestration using LangGraph."""
 
-from typing import Any, Dict
+import uuid
+from typing import Any
 from app.ai.models import AnalysisInput, AnalysisResult
-from app.ai.graphs.health_graph import HealthGraph
+from app.ai.graphs.langgraph_builder import compile_health_analysis_graph
+from app.ai.state import HealthAnalysisState
 
 
 class AnalysisWorkflow:
-    """Orchestrates the health analysis workflow."""
+    """Orchestrates the health analysis workflow using LangGraph."""
 
     def __init__(self):
-        """Initialize analysis workflow."""
-        self.graph = HealthGraph()
-        self._build_workflow_graph()
-
-    def _build_workflow_graph(self) -> None:
-        """Build the workflow execution graph."""
-        # TODO: Implement LangGraph integration
-
-        # Add nodes
-        self.graph.add_node("input", "data", {"description": "User input"})
-        self.graph.add_node("symptom_analysis", "agent", {"description": "Symptom analysis"})
-        self.graph.add_node("risk_assessment", "agent", {"description": "Risk assessment"})
-        self.graph.add_node("specialist_match", "agent", {"description": "Specialist matching"})
-        self.graph.add_node("report_generation", "agent", {"description": "Report generation"})
-        self.graph.add_node("output", "data", {"description": "Analysis result"})
-
-        # Add edges
-        self.graph.add_edge("input", "symptom_analysis")
-        self.graph.add_edge("symptom_analysis", "risk_assessment")
-        self.graph.add_edge("risk_assessment", "specialist_match")
-        self.graph.add_edge("specialist_match", "report_generation")
-        self.graph.add_edge("report_generation", "output")
+        """Initialize analysis workflow with compiled LangGraph."""
+        self.compiled_graph = compile_health_analysis_graph()
 
     async def execute(self, input_data: AnalysisInput) -> AnalysisResult:
-        """
-        Execute the analysis workflow.
+        """Execute the analysis workflow with LangGraph orchestration."""
+        session_id = str(uuid.uuid4())
 
-        TODO: Implement LangGraph execution.
-        TODO: Implement agent orchestration.
-        """
-        # Placeholder execution
+        initial_state: HealthAnalysisState = {
+            "session_id": session_id,
+            "user_input": input_data.symptoms,
+            "analysis_input": input_data,
+            "symptom_analysis": {},
+            "doctor_recommendations": [],
+            "workflow_status": "started",
+            "current_step": "initialization",
+            "errors": [],
+            "metadata": {
+                "user_id": input_data.user_id,
+                "medical_history": input_data.medical_history,
+                "medications": input_data.medications,
+                "allergies": input_data.allergies,
+            },
+        }
+
+        final_state = await self.compiled_graph.ainvoke(initial_state)
+
         return AnalysisResult(
-            analysis_id="placeholder",
-            risk_assessment={
-                "risk_level": "TODO",
-                "confidence": 0.0,
-                "reasoning": "Workflow execution pending implementation",
-                "warning_signs": [],
-            },
-            specialist_recommendation={
-                "specialist": "TODO",
-                "reasoning": "Specialist recommendation pending implementation",
-                "urgency": "TODO",
-            },
-            health_report={
-                "summary": "Workflow execution pending implementation",
-                "home_care": [],
-                "lifestyle": [],
-                "monitoring": [],
-                "references": [],
-            },
+            analysis_id=session_id,
+            risk_assessment=final_state.get("risk_assessment"),
+            specialist_recommendation=final_state.get("specialist_recommendation"),
+            health_report=final_state.get("health_report"),
+            emergency_alert=False,
         )
-
-    def get_graph_visualization(self) -> Dict[str, Any]:
-        """Get graph visualization data."""
-        return self.graph.to_dict()
