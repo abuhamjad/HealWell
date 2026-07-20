@@ -1,5 +1,16 @@
 # HealWell Development Rules
 
+## Prompt Workflow
+
+Before executing any task:
+
+1. Read MASTER_CODE.md
+2. Read docs/PROMPTS.md
+3. Select the appropriate prompt template
+4. Execute only the requested milestone
+5. Return the standardized review format
+6. Wait for the next milestone
+
 ## Role
 
 You are the implementation engineer.

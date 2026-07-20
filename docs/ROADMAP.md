@@ -13,12 +13,14 @@
 - Integrate speech-to-text UI
 - Setup TailwindCSS styling system
 
-## v0.3 Backend & API
-- Develop FastAPI backend structure
-- Implement core endpoints
-- Setup PostgreSQL database
-- Create data models and schemas
-- Implement authentication and authorization
+## v0.3 Backend & API ✅ Completed
+- ✅ Develop FastAPI backend structure
+- ✅ Implement core endpoints (with placeholder responses)
+- ✅ Create Pydantic schemas for request/response validation
+- ✅ Configure CORS for frontend development
+- ✅ Setup environment configuration
+- ⏳ PostgreSQL database (deferred to v0.4)
+- ⏳ Authentication and authorization (deferred to v0.4)
 
 ## v0.4 Integration
 - Connect frontend to backend APIs
