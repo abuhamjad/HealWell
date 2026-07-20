@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { AnalysisResult, Doctor, RiskLevel, AnalysisPhase } from '../types'
 import { RiskBadge, StarRating } from '../components/RiskBadge'
+import { useAnalysis } from '../hooks/useAnalysis'
 
 const PROCESSING_STEPS = [
   { label: 'Understanding Symptoms', icon: Brain, color: '#3B82F6' },
@@ -23,14 +24,8 @@ const PROCESSING_STEPS = [
   { label: 'Generating Health Report', icon: FileText, color: '#A855F7' },
 ]
 
-const MOCK_DOCTORS: Doctor[] = [
-  { name: 'Dr. Sarah Chen', hospital: 'Apollo Hospitals', distance: '0.8 km', rating: 4.9, specialty: 'General Physician', available: true },
-  { name: 'Dr. Rajesh Kumar', hospital: 'Fortis Healthcare', distance: '1.4 km', rating: 4.7, specialty: 'Internal Medicine', available: true },
-  { name: 'Dr. Priya Sharma', hospital: 'Max Super Speciality', distance: '2.1 km', rating: 4.8, specialty: 'General Physician', available: false },
-  { name: 'Dr. Arjun Mehta', hospital: 'Medanta Hospital', distance: '3.2 km', rating: 4.6, specialty: 'General Physician', available: true },
-]
-
 export function Analysis() {
+  const { createAnalysis, loading: apiLoading, error: apiError } = useAnalysis()
   const [phase, setPhase] = useState<AnalysisPhase>('idle')
   const [currentStep, setCurrentStep] = useState(0)
   const [result, setResult] = useState<AnalysisResult | null>(null)
@@ -66,7 +61,7 @@ export function Analysis() {
     setIsRecording(false)
   }, [])
 
-  const runAnalysis = useCallback(() => {
+  const runAnalysis = useCallback(async () => {
     if (!symptoms.trim()) return
     setPhase('processing')
     setCurrentStep(0)
@@ -76,59 +71,42 @@ export function Analysis() {
       setCurrentStep(step)
       if (step >= PROCESSING_STEPS.length - 1) {
         clearInterval(iv)
-        setTimeout(() => {
-          const s = symptoms.toLowerCase()
-          const risk: RiskLevel = s.includes('chest') || s.includes('emergency') || s.includes('collapse') ? 'high'
-            : s.includes('pain') || s.includes('fever') || s.includes('headache') ? 'moderate' : 'low'
-          setResult({
-            id: Date.now().toString(),
-            date: new Date().toISOString().split('T')[0],
-            symptoms,
-            riskLevel: risk,
-            confidence: 86 + Math.floor(Math.random() * 12),
-            summary: risk === 'high'
-              ? 'The AI system detected high-priority symptoms that require immediate medical attention. Cardiac or respiratory causes must be ruled out by emergency medical personnel. Do not delay seeking care.'
-              : risk === 'moderate'
-                ? 'The AI analysis identified symptom patterns consistent with a condition warranting medical evaluation within 24–48 hours. Home-care measures are appropriate while arranging a consultation. Monitor for any deterioration.'
-                : 'Symptoms appear consistent with a self-limiting condition manageable with home care and monitoring. No emergency flags were detected. Follow the guidance below and seek care if symptoms worsen or persist beyond 5–7 days.',
-            specialist: risk === 'high' ? 'Cardiologist / Emergency Medicine' : risk === 'moderate' ? 'General Physician' : 'General Practitioner',
-            specialistIcon: risk === 'high' ? '🫀' : '🩺',
-            emergency: risk === 'high',
-            emergencyNote: risk === 'high' ? 'Please call 112 or go to the nearest emergency room immediately. Do not drive yourself. Sit down and stay calm.' : '',
-            homeCare: [
-              'Rest adequately and avoid all strenuous physical activity',
-              'Stay well-hydrated — drink 8–10 glasses of water throughout the day',
-              'Monitor your temperature every 4 hours and log readings',
-              'Take OTC pain relief only as directed on the packaging',
-            ],
-            lifestyle: [
-              'Maintain a consistent sleep schedule of 7–9 hours per night',
-              'Increase intake of antioxidant-rich vegetables and whole grains',
-              'Practice 15-minute guided deep breathing exercises daily',
-              'Reduce screen time and blue light exposure before bed',
-            ],
-            monitor: [
-              'Temperature — seek care immediately if above 103°F (39.4°C)',
-              'Symptom duration — escalate if persisting beyond 5–7 days',
-              'Pain intensity — any sudden or dramatic increase in severity',
-              'New or unusual symptoms not present at time of analysis',
-            ],
-            nearbyDoctors: MOCK_DOCTORS,
-            agentOutputs: [
-              { agent: 'Symptom Analysis Agent', icon: '🔬', status: 'complete', output: `Processed ${symptoms.split(/\s+/).length} tokens. Pattern confidence: 94.2%.`, time: '0.42s' },
-              { agent: 'Medical History Agent', icon: '📋', status: 'complete', output: `History weight applied to risk model.`, time: '0.31s' },
-              { agent: 'Risk Assessment Agent', icon: '⚡', status: 'complete', output: `Risk Level: ${risk.toUpperCase()}.`, time: '0.58s' },
-              { agent: 'Emergency Detection Agent', icon: '🚨', status: 'complete', output: risk === 'high' ? 'Critical flags detected.' : 'No emergency markers.', time: '0.22s' },
-              { agent: 'Specialist Recommendation Agent', icon: '👨‍⚕️', status: 'complete', output: `Match confidence: 91.8%.`, time: '0.44s' },
-              { agent: 'Nearby Doctor Finder Agent', icon: '📍', status: 'complete', output: `Located 4 practitioners within 3.2km.`, time: '1.12s' },
-              { agent: 'Health Report Generator', icon: '📄', status: 'complete', output: `Report ready for download.`, time: '0.67s' },
-            ],
-          })
-          setPhase('complete')
-        }, 400)
       }
     }, 680)
-  }, [symptoms, formData])
+
+    try {
+      const analysisData = await createAnalysis({ symptoms })
+
+      if (analysisData) {
+        const riskLevel = analysisData.risk_level as RiskLevel
+        setResult({
+          id: analysisData.analysis_id,
+          date: new Date().toISOString().split('T')[0],
+          symptoms,
+          riskLevel,
+          confidence: analysisData.confidence,
+          summary: `Analysis received: Risk level is ${riskLevel}. Specialist recommended: ${analysisData.specialist}`,
+          specialist: analysisData.specialist,
+          specialistIcon: riskLevel === 'high' ? '🫀' : riskLevel === 'moderate' ? '⚠️' : '✓',
+          emergency: analysisData.emergency,
+          emergencyNote: analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : '',
+          homeCare: ['Rest adequately', 'Stay well-hydrated', 'Monitor symptoms', 'Follow specialist recommendations'],
+          lifestyle: ['Maintain healthy habits', 'Manage stress', 'Regular exercise', 'Adequate sleep'],
+          monitor: ['Symptom progression', 'Any new symptoms', 'Severity changes', 'Follow-up care'],
+          nearbyDoctors: [],
+          agentOutputs: [
+            { agent: 'API Analysis', icon: '🔬', status: 'complete', output: `Analysis complete. Risk: ${riskLevel}`, time: '1.5s' },
+          ],
+        })
+      }
+
+      setPhase('complete')
+    } catch (error) {
+      console.error('Analysis error:', error)
+      alert('Failed to complete analysis. Please try again.')
+      setPhase('idle')
+    }
+  }, [symptoms, createAnalysis])
 
   const clearAll = () => { setPhase('idle'); setResult(null); setSymptoms(''); setCurrentStep(0) }
 
@@ -248,6 +226,13 @@ export function Analysis() {
                     In emergencies, call 112 immediately.
                   </p>
                 </div>
+
+                {apiError && (
+                  <div className="glass rounded-xl p-4 mt-3 flex items-start gap-3 border border-red-400/30 bg-red-400/08">
+                    <AlertTriangle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs leading-relaxed text-red-400">{apiError}</p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

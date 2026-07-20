@@ -272,3 +272,17 @@ Never commit:
 - .env
 
 Ensure they remain in .gitignore.
+
+# Roadmap Rules
+
+The project roadmap is locked.
+
+Milestones must not be renumbered.
+
+If additional work is discovered during development:
+
+- Add it as a task within the current milestone.
+- Do not create unnecessary sub-versions.
+- Do not move completed work into future milestones.
+
+Only the project architect (ChatGPT) may modify the roadmap.

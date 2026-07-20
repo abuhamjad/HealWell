@@ -1,22 +1,34 @@
 from fastapi import APIRouter
-from app.schemas.doctor import DoctorsResponse
+from app.schemas.response import ApiResponse, success_response
+from app.core.constants import SUCCESS_DOCTORS_FOUND, DEFAULT_DOCTOR_RADIUS
+from app.services.doctor_service import DoctorService
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
+doctor_service = DoctorService()
 
 
-@router.get("", response_model=DoctorsResponse)
+@router.get("", response_model=ApiResponse)
 async def get_nearby_doctors(
     latitude: float = None,
     longitude: float = None,
     specialty: str = None,
-    radius_km: float = 5.0
+    radius_km: float = DEFAULT_DOCTOR_RADIUS
 ):
     """
     Find nearby healthcare providers.
 
-    Placeholder endpoint - returns mock data.
+    Delegates to DoctorService.
     """
-    return {
+    # Delegate to service layer
+    result = await doctor_service.find_nearby(
+        latitude=latitude,
+        longitude=longitude,
+        specialty=specialty,
+        radius_km=radius_km,
+    )
+
+    # Mock return for now - will integrate with database and geolocation
+    doctors_data = {
         "doctors": [
             {
                 "id": "doctor_001",
@@ -39,3 +51,4 @@ async def get_nearby_doctors(
         ],
         "count": 2
     }
+    return success_response(message=SUCCESS_DOCTORS_FOUND, data=doctors_data)
