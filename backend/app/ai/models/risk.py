@@ -6,9 +6,10 @@ from typing import List
 
 class RiskAssessment(BaseModel):
     """Risk assessment result."""
-    risk_level: str  # low, moderate, high
-    confidence: float  # 0-100
+    risk_level: str  # LOW, MODERATE, HIGH
+    confidence: float  # 0.0-1.0
+    emergency_alert: bool
+    red_flags_detected: List[str] = []
+    recommended_specialist: str
     reasoning: str
-    risk_explanation: str
-    confidence_explanation: str
-    warning_signs: List[str] = []
+    instructions: str

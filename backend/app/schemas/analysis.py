@@ -11,12 +11,11 @@ class AnalysisResponse(BaseModel):
     analysis_id: str
     risk_level: str
     confidence: float
-    confidence_explanation: str
-    risk_explanation: str
+    reasoning: str
     specialist: str
     specialist_explanation: str
     emergency: bool
-    emergency_instructions: Optional[str] = None
+    instructions: Optional[str] = None
     status: str = "success"
 
     # Full report content

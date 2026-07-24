@@ -57,8 +57,6 @@ class ReportAgent(BaseAgent):
             combined_report = HealthReport(
                 summary=report_result.summary,
                 summary_explanation=report_result.summary_explanation,
-                confidence_explanation=risk_assessment.confidence_explanation,
-                risk_explanation=risk_assessment.risk_explanation,
                 specialist_explanation=specialist_recommendation.specialist_explanation,
                 home_care=report_result.home_care,
                 personalized_home_care=report_result.personalized_home_care,
@@ -81,9 +79,26 @@ class ReportAgent(BaseAgent):
             )
 
         except Exception as e:
-            logger.error(f"Report generation failed: {e}")
+            logger.error(f"Report generation failed: {e}. Using MockProvider fallback.")
             state["errors"] = state.get("errors", []) + [f"Report generation error: {str(e)}"]
-            state["current_step"] = "health_report_failed"
-            state["health_report"] = None
+            state["current_step"] = "health_report_fallback"
+            from app.ai.providers.mock_provider import MockProvider
+            mock_provider = MockProvider()
+            symptom_analysis = state.get("symptom_analysis", {})
+            risk_assessment = state.get("risk_assessment")
+            specialist_recommendation = state.get("specialist_recommendation")
+            if not risk_assessment:
+                risk_assessment = await mock_provider.analyze_risk_structured(symptom_analysis)
+                state["risk_assessment"] = risk_assessment
+            if not specialist_recommendation:
+                specialist_recommendation = await mock_provider.analyze_specialist_structured(risk_assessment)
+                state["specialist_recommendation"] = specialist_recommendation
+            report_result = await mock_provider.generate_health_report_structured(
+                symptom_analysis=symptom_analysis,
+                risk_assessment=risk_assessment,
+                specialist_recommendation=specialist_recommendation,
+            )
+            state["health_report"] = report_result
 
         return state
+

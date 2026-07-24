@@ -44,6 +44,35 @@ class RiskAgent(BaseAgent):
 
             risk_result = await provider.analyze_risk_structured(symptom_analysis)
 
+            # Safety Guardrail: use medical triage DB to enforce correct risk
+            from app.ai.providers.medical_triage import lookup_triage, detect_emergency
+            user_input = (state.get("user_input") or "")
+            symptom_summary = str(symptom_analysis.get("summary", ""))
+            detected_str = " ".join(symptom_analysis.get("detected_symptoms", []))
+            full_text = f"{user_input} {symptom_summary} {detected_str}"
+
+            triage_entry, matched_kw = lookup_triage(full_text)
+            is_emergency, red_flags = detect_emergency(full_text)
+
+            is_high_risk = is_emergency or (triage_entry and triage_entry.risk_level == "high")
+
+            if is_high_risk and risk_result.risk_level != "HIGH":
+                matched_reason = " | ".join(red_flags) if is_emergency else (matched_kw.title() if matched_kw else "Critical symptom combination")
+                logger.warning(f"Safety guardrail: triage DB matched '{matched_reason}' as HIGH risk. Overriding provider result.")
+                risk_result.risk_level = "HIGH"
+                risk_result.confidence = max(risk_result.confidence, 0.95)
+                risk_result.emergency_alert = True
+                risk_result.instructions = "CALL EMERGENCY SERVICES (911) IMMEDIATELY."
+                risk_result.reasoning = f"Evaluated as HIGH RISK — {matched_reason} is a potentially life-threatening condition."
+                
+                # Merge warning signs into red_flags_detected without duplicates
+                current_flags = set(risk_result.red_flags_detected) if hasattr(risk_result, 'red_flags_detected') else set()
+                if is_emergency:
+                    current_flags.update(red_flags)
+                if triage_entry:
+                    current_flags.update(triage_entry.warning_signs)
+                risk_result.red_flags_detected = list(current_flags)
+
             state["risk_assessment"] = risk_result
             state["current_step"] = "risk_assessment"
             state["workflow_status"] = "risk_assessment_complete"
@@ -54,8 +83,15 @@ class RiskAgent(BaseAgent):
             )
 
         except Exception as e:
-            logger.error(f"Risk assessment failed: {e}")
+            logger.error(f"Risk assessment failed: {e}. Using MockProvider fallback.")
             state["errors"] = state.get("errors", []) + [f"Risk assessment error: {str(e)}"]
-            state["current_step"] = "risk_assessment_failed"
+            state["current_step"] = "risk_assessment_fallback"
+            from app.ai.providers.mock_provider import MockProvider
+            mock_provider = MockProvider()
+            symptom_analysis = state.get("symptom_analysis", {})
+            risk_result = await mock_provider.analyze_risk_structured(symptom_analysis)
+            state["risk_assessment"] = risk_result
 
         return state
+
+

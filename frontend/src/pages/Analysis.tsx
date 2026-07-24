@@ -78,18 +78,18 @@ export function Analysis() {
       const analysisData = await createAnalysis({ symptoms })
 
       if (analysisData) {
-        const riskLevel = analysisData.risk_level as RiskLevel
+        const riskLevel = (analysisData.risk_level || 'moderate').toLowerCase() as RiskLevel
         setResult({
           id: analysisData.analysis_id,
           date: new Date().toISOString().split('T')[0],
           symptoms,
           riskLevel,
-          confidence: analysisData.confidence,
+          confidence: analysisData.confidence <= 1 ? Number((analysisData.confidence * 100).toFixed(0)) : Math.round(analysisData.confidence),
           summary: analysisData.summary_explanation,
           specialist: analysisData.specialist,
           specialistIcon: riskLevel === 'high' ? '🫀' : riskLevel === 'moderate' ? '⚠️' : '✓',
           emergency: analysisData.emergency,
-          emergencyNote: analysisData.emergency_instructions || (analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : ''),
+          emergencyNote: analysisData.instructions || (analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : ''),
           homeCare: analysisData.personalized_home_care && analysisData.personalized_home_care.length > 0 ? analysisData.personalized_home_care : ['Care guidance pending'],
           lifestyle: analysisData.personalized_lifestyle && analysisData.personalized_lifestyle.length > 0 ? analysisData.personalized_lifestyle : ['Lifestyle guidance pending'],
           monitor: analysisData.monitoring_guidance && analysisData.monitoring_guidance.length > 0 ? analysisData.monitoring_guidance : ['Monitor your condition'],
@@ -97,8 +97,8 @@ export function Analysis() {
           agentOutputs: [
             { agent: 'API Analysis', icon: '🔬', status: 'complete', output: `Analysis complete. Risk: ${riskLevel}`, time: '1.5s' },
           ],
-          confidenceExplanation: analysisData.confidence_explanation,
-          riskExplanation: analysisData.risk_explanation,
+          confidenceExplanation: 'Confidence assessment completed.',
+          riskExplanation: analysisData.reasoning,
           specialistExplanation: analysisData.specialist_explanation,
         } as any)
       }

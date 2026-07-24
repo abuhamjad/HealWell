@@ -40,12 +40,13 @@ class GeminiProvider(BaseProvider):
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             risk_assessment=RiskAssessment(
-                risk_level=risk_level,
-                confidence=87.5,
+                risk_level=risk_level.upper(),
+                confidence=0.87,
+                emergency_alert=risk_level == "high",
+                red_flags_detected=[],
+                recommended_specialist="General Practitioner",
                 reasoning="Analysis pending implementation",
-                risk_explanation="Assessment completed.",
-                confidence_explanation="Confidence level determined.",
-                warning_signs=[],
+                instructions="Monitor your condition",
             ),
             specialist_recommendation=SpecialistRecommendation(
                 specialist="General Practitioner",
@@ -56,8 +57,6 @@ class GeminiProvider(BaseProvider):
             health_report=HealthReport(
                 summary="Health assessment completed.",
                 summary_explanation="Assessment completed.",
-                confidence_explanation="Confidence level determined.",
-                risk_explanation="Assessment completed.",
                 specialist_explanation="Recommendation completed.",
                 home_care=["Rest", "Stay hydrated"],
                 personalized_home_care=["Rest adequately", "Stay well-hydrated"],

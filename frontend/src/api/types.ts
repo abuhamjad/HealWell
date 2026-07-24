@@ -24,12 +24,11 @@ export interface AnalysisData {
   analysis_id: string
   risk_level: 'low' | 'moderate' | 'high'
   confidence: number
-  confidence_explanation: string
-  risk_explanation: string
+  reasoning: string
   specialist: string
   specialist_explanation: string
   emergency: boolean
-  emergency_instructions?: string | null
+  instructions?: string | null
   summary_explanation: string
   personalized_home_care: string[]
   personalized_lifestyle: string[]

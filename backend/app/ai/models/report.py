@@ -14,8 +14,6 @@ class HealthReport(BaseModel):
 
     # v0.8 AI-generated explanations
     summary_explanation: str
-    confidence_explanation: str
-    risk_explanation: str
     specialist_explanation: str
     personalized_home_care: List[str] = []
     personalized_lifestyle: List[str] = []

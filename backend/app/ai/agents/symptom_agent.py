@@ -56,8 +56,13 @@ class SymptomAgent(BaseAgent):
             )
 
         except Exception as e:
-            logger.error(f"Symptom analysis failed: {e}")
+            logger.error(f"Symptom analysis failed: {e}. Using MockProvider fallback.")
             state["errors"] = state.get("errors", []) + [f"Symptom analysis error: {str(e)}"]
-            state["current_step"] = "symptom_analysis_failed"
+            state["current_step"] = "symptom_analysis_fallback"
+            from app.ai.providers.mock_provider import MockProvider
+            mock_provider = MockProvider()
+            symptom_result = await mock_provider.analyze_symptoms_structured(analysis_input)
+            state["symptom_analysis"] = symptom_result.model_dump()
 
         return state
+

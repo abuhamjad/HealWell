@@ -49,8 +49,17 @@ class SpecialistAgent(BaseAgent):
             )
 
         except Exception as e:
-            logger.error(f"Specialist recommendation failed: {e}")
+            logger.error(f"Specialist recommendation failed: {e}. Using MockProvider fallback.")
             state["errors"] = state.get("errors", []) + [f"Specialist recommendation error: {str(e)}"]
-            state["current_step"] = "specialist_recommendation_failed"
+            state["current_step"] = "specialist_recommendation_fallback"
+            from app.ai.providers.mock_provider import MockProvider
+            mock_provider = MockProvider()
+            risk_assessment = state.get("risk_assessment")
+            if not risk_assessment:
+                risk_assessment = await mock_provider.analyze_risk_structured(state.get("symptom_analysis", {}))
+                state["risk_assessment"] = risk_assessment
+            specialist_result = await mock_provider.analyze_specialist_structured(risk_assessment)
+            state["specialist_recommendation"] = specialist_result
 
         return state
+

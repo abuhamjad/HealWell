@@ -141,12 +141,13 @@ class OpenAIProvider(BaseProvider):
             risk_data = json.loads(response_text)
 
             return RiskAssessment(
-                risk_level=risk_data.get("risk_level", "moderate"),
-                confidence=float(risk_data.get("confidence", 75)),
+                risk_level=risk_data.get("risk_level", "MODERATE"),
+                confidence=float(risk_data.get("confidence", 0.75)),
+                emergency_alert=bool(risk_data.get("emergency_alert", False)),
+                red_flags_detected=risk_data.get("red_flags_detected", []),
+                recommended_specialist=risk_data.get("recommended_specialist", "General Practitioner"),
                 reasoning=risk_data.get("reasoning", "Risk assessment completed"),
-                risk_explanation=risk_data.get("risk_explanation", "Assessment completed."),
-                confidence_explanation=risk_data.get("confidence_explanation", "Confidence level determined."),
-                warning_signs=risk_data.get("warning_signs", []),
+                instructions=risk_data.get("instructions", ""),
             )
 
         except json.JSONDecodeError as e:
@@ -175,7 +176,7 @@ class OpenAIProvider(BaseProvider):
         risk_dict = {
             "risk_level": risk_assessment.risk_level,
             "reasoning": risk_assessment.reasoning,
-            "warning_signs": risk_assessment.warning_signs,
+            "warning_signs": risk_assessment.red_flags_detected,
         }
 
         prompt = get_specialist_recommendation_prompt(risk_dict)
@@ -241,7 +242,7 @@ class OpenAIProvider(BaseProvider):
         risk_dict = {
             "risk_level": risk_assessment.risk_level,
             "reasoning": risk_assessment.reasoning,
-            "warning_signs": risk_assessment.warning_signs,
+            "warning_signs": risk_assessment.red_flags_detected,
         }
 
         specialist_dict = {
@@ -276,8 +277,6 @@ class OpenAIProvider(BaseProvider):
             return HealthReport(
                 summary=report_data.get("summary", "Health assessment completed."),
                 summary_explanation=report_data.get("summary_explanation", "Assessment completed."),
-                confidence_explanation=report_data.get("confidence_explanation", "Confidence level determined."),
-                risk_explanation=report_data.get("risk_explanation", "Risk assessment completed."),
                 specialist_explanation=report_data.get("specialist_explanation", "Specialist recommended."),
                 home_care=report_data.get("home_care", []),
                 personalized_home_care=report_data.get("personalized_home_care", []),
@@ -316,12 +315,13 @@ class OpenAIProvider(BaseProvider):
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             risk_assessment=RiskAssessment(
-                risk_level=risk_level,
-                confidence=87.5,
+                risk_level=risk_level.upper(),
+                confidence=0.87,
+                emergency_alert=risk_level == "high",
+                red_flags_detected=[],
+                recommended_specialist="General Practitioner",
                 reasoning="Analysis pending implementation",
-                risk_explanation="Assessment completed.",
-                confidence_explanation="Confidence level determined.",
-                warning_signs=[],
+                instructions="Monitor your condition",
             ),
             specialist_recommendation=SpecialistRecommendation(
                 specialist="General Practitioner",
@@ -332,8 +332,6 @@ class OpenAIProvider(BaseProvider):
             health_report=HealthReport(
                 summary="Health assessment completed.",
                 summary_explanation="Assessment completed.",
-                confidence_explanation="Confidence level determined.",
-                risk_explanation="Assessment completed.",
                 specialist_explanation="Recommendation completed.",
                 home_care=["Rest", "Stay hydrated"],
                 personalized_home_care=["Rest adequately", "Stay well-hydrated"],
