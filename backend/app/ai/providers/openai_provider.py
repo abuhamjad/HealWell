@@ -1,6 +1,8 @@
 """OpenAI-compatible AI provider implementation."""
 
 import uuid
+import json
+import logging
 from typing import Any, Dict
 from openai import AsyncOpenAI
 from app.ai.models import (
@@ -9,9 +11,13 @@ from app.ai.models import (
     RiskAssessment,
     SpecialistRecommendation,
     HealthReport,
+    SymptomAnalysis,
 )
+from app.ai.prompts.symptom_prompt import get_symptom_analysis_prompt
 from app.ai.providers.base import BaseProvider
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(BaseProvider):
@@ -34,6 +40,64 @@ class OpenAIProvider(BaseProvider):
             timeout=self.timeout,
         )
         self.is_initialized = True
+
+    async def analyze_symptoms_structured(self, input_data: AnalysisInput) -> SymptomAnalysis:
+        """Analyze symptoms using OpenAI-compatible API and return structured result.
+
+        Args:
+            input_data: AnalysisInput containing symptoms and medical context
+
+        Returns:
+            SymptomAnalysis with detected symptoms and assessment
+
+        Raises:
+            Exception: If API call fails or response is invalid JSON
+        """
+        if not self.is_initialized or not self.client:
+            raise RuntimeError("Provider not initialized. Call initialize() first.")
+
+        prompt = get_symptom_analysis_prompt(
+            symptoms=input_data.symptoms,
+            medical_history=input_data.medical_history,
+            medications=input_data.medications,
+            allergies=input_data.allergies,
+        )
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a medical analysis assistant. Respond with only valid JSON, no additional text.",
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                temperature=0.7,
+                max_tokens=1000,
+            )
+
+            response_text = response.choices[0].message.content.strip()
+
+            symptom_data = json.loads(response_text)
+
+            return SymptomAnalysis(
+                detected_symptoms=symptom_data.get("detected_symptoms", []),
+                confidence=float(symptom_data.get("confidence", 75)),
+                summary=symptom_data.get("summary", "Symptom analysis completed"),
+                severity_indicators=symptom_data.get("severity_indicators", []),
+                affected_systems=symptom_data.get("affected_systems", []),
+            )
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            raise ValueError(f"Invalid JSON response from LLM: {e}")
+        except Exception as e:
+            logger.error(f"Symptom analysis failed: {e}")
+            raise
 
     async def analyze_symptoms(self, input_data: AnalysisInput) -> AnalysisResult:
         """

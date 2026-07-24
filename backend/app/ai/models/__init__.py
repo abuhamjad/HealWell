@@ -5,6 +5,7 @@
 from app.ai.models.risk import RiskAssessment
 from app.ai.models.specialist import SpecialistRecommendation
 from app.ai.models.report import HealthReport
+from app.ai.models.symptom import SymptomAnalysis
 
 # Composite models that depend on core models
 from app.ai.models.analysis import AnalysisInput, AnalysisResult
@@ -18,4 +19,5 @@ __all__ = [
     "RiskAssessment",
     "SpecialistRecommendation",
     "HealthReport",
+    "SymptomAnalysis",
 ]
