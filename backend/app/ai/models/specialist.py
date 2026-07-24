@@ -7,4 +7,5 @@ class SpecialistRecommendation(BaseModel):
     """Specialist recommendation."""
     specialist: str
     reasoning: str
+    specialist_explanation: str
     urgency: str  # immediate, 24-48 hours, 1-2 weeks

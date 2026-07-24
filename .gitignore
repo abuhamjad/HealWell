@@ -81,3 +81,10 @@ frontend/node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+#project architecture
+project_tree.txt
+
+#test files
+test_config.py
+test_groq.py

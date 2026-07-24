@@ -22,9 +22,9 @@ class AnalysisInput(BaseModel):
 class AnalysisResult(BaseModel):
     """Complete analysis result."""
     analysis_id: str
-    risk_assessment: "RiskAssessment"  # type: ignore
-    specialist_recommendation: "SpecialistRecommendation"  # type: ignore
-    health_report: "HealthReport"  # type: ignore
+    risk_assessment: Optional["RiskAssessment"] = None  # type: ignore
+    specialist_recommendation: Optional["SpecialistRecommendation"] = None  # type: ignore
+    health_report: Optional["HealthReport"] = None  # type: ignore
     emergency_alert: bool = False
     emergency_message: Optional[str] = None
 
