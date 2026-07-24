@@ -85,19 +85,22 @@ export function Analysis() {
           symptoms,
           riskLevel,
           confidence: analysisData.confidence,
-          summary: `Analysis received: Risk level is ${riskLevel}. Specialist recommended: ${analysisData.specialist}`,
+          summary: analysisData.summary_explanation,
           specialist: analysisData.specialist,
           specialistIcon: riskLevel === 'high' ? '🫀' : riskLevel === 'moderate' ? '⚠️' : '✓',
           emergency: analysisData.emergency,
-          emergencyNote: analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : '',
-          homeCare: ['Rest adequately', 'Stay well-hydrated', 'Monitor symptoms', 'Follow specialist recommendations'],
-          lifestyle: ['Maintain healthy habits', 'Manage stress', 'Regular exercise', 'Adequate sleep'],
-          monitor: ['Symptom progression', 'Any new symptoms', 'Severity changes', 'Follow-up care'],
+          emergencyNote: analysisData.emergency_instructions || (analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : ''),
+          homeCare: analysisData.personalized_home_care && analysisData.personalized_home_care.length > 0 ? analysisData.personalized_home_care : ['Care guidance pending'],
+          lifestyle: analysisData.personalized_lifestyle && analysisData.personalized_lifestyle.length > 0 ? analysisData.personalized_lifestyle : ['Lifestyle guidance pending'],
+          monitor: analysisData.monitoring_guidance && analysisData.monitoring_guidance.length > 0 ? analysisData.monitoring_guidance : ['Monitor your condition'],
           nearbyDoctors: [],
           agentOutputs: [
             { agent: 'API Analysis', icon: '🔬', status: 'complete', output: `Analysis complete. Risk: ${riskLevel}`, time: '1.5s' },
           ],
-        })
+          confidenceExplanation: analysisData.confidence_explanation,
+          riskExplanation: analysisData.risk_explanation,
+          specialistExplanation: analysisData.specialist_explanation,
+        } as any)
       }
 
       setPhase('complete')
@@ -313,17 +316,23 @@ export function Analysis() {
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                className="glass rounded-2xl p-5 flex flex-col items-center justify-center">
-                <div className="text-xs font-medium mb-3" style={{ color: 'rgba(255,255,255,0.38)' }}>AI Confidence</div>
-                <div className="text-xl font-bold gradient-text" style={{ fontFamily: 'Manrope, sans-serif' }}>{result.confidence}%</div>
+                className="glass rounded-2xl p-5 flex flex-col">
+                <div className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.38)' }}>AI Confidence</div>
+                <div className="text-xl font-bold gradient-text mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>{result.confidence}%</div>
+                <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.48)' }}>
+                  {(result as any).confidenceExplanation || 'Confidence assessment completed.'}
+                </div>
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                 className="glass rounded-2xl p-5">
                 <div className="text-xs font-medium mb-3" style={{ color: 'rgba(255,255,255,0.38)' }}>Specialist</div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-3">
                   <span className="text-3xl">{result.specialistIcon}</span>
                   <div className="font-semibold text-white text-sm">{result.specialist}</div>
+                </div>
+                <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.48)' }}>
+                  {(result as any).specialistExplanation || 'Specialist recommendation completed.'}
                 </div>
               </motion.div>
             </div>

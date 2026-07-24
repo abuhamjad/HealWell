@@ -1,7 +1,7 @@
 """Health report model."""
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class HealthReport(BaseModel):
@@ -11,3 +11,13 @@ class HealthReport(BaseModel):
     lifestyle: List[str] = []
     monitoring: List[str] = []
     references: List[str] = []
+
+    # v0.8 AI-generated explanations
+    summary_explanation: str
+    confidence_explanation: str
+    risk_explanation: str
+    specialist_explanation: str
+    personalized_home_care: List[str] = []
+    personalized_lifestyle: List[str] = []
+    monitoring_guidance: List[str] = []
+    emergency_instructions: Optional[str] = None

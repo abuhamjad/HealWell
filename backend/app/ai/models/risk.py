@@ -9,4 +9,6 @@ class RiskAssessment(BaseModel):
     risk_level: str  # low, moderate, high
     confidence: float  # 0-100
     reasoning: str
+    risk_explanation: str
+    confidence_explanation: str
     warning_signs: List[str] = []
