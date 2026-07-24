@@ -3,7 +3,7 @@
 import uuid
 from app.ai.models import AnalysisInput, AnalysisResult
 from app.ai.workflows.analysis_workflow import AnalysisWorkflow
-from app.ai.providers.gemini import GeminiProvider
+from app.ai.providers.factory import create_provider
 
 
 class AnalysisService:
@@ -11,7 +11,7 @@ class AnalysisService:
 
     def __init__(self, ai_provider=None):
         """Initialize analysis service."""
-        self.ai_provider = ai_provider or GeminiProvider()
+        self.ai_provider = ai_provider or create_provider()
         self.workflow = AnalysisWorkflow()
 
     async def analyze(self, symptoms: str, user_id: str = None) -> AnalysisResult:
