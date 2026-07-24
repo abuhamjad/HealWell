@@ -150,7 +150,7 @@ export function History() {
                           <Stethoscope size={11} /><span>{item.specialist}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Brain size={11} /><span>{item.confidence}% confidence</span>
+                          <Brain size={11} /><span>{(item.confidence * 100).toFixed(0)}% confidence</span>
                         </div>
                       </div>
                     </div>

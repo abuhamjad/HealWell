@@ -53,6 +53,7 @@ class MockProvider(BaseProvider):
             affected_systems.add("General / Systemic")
 
         return SymptomAnalysis(
+            raw_text=input_data.symptoms or "",
             detected_symptoms=detected,
             confidence=95.0 if is_critical else 85.0,
             summary=f"Analysis of reported symptoms: {', '.join(detected)}.",
@@ -64,11 +65,49 @@ class MockProvider(BaseProvider):
     # 2. RISK ASSESSMENT
     # ------------------------------------------------------------------
     async def analyze_risk_structured(self, symptom_analysis: dict) -> RiskAssessment:
-        # Build a combined blob from all available symptom data
-        detected_list = symptom_analysis.get("detected_symptoms", [])
-        summary = symptom_analysis.get("summary", "")
-        severity_list = symptom_analysis.get("severity_indicators", [])
-        blob = f"{summary} {' '.join(detected_list)} {' '.join(severity_list)}"
+        if isinstance(symptom_analysis, dict):
+            detected_list = symptom_analysis.get("detected_symptoms", [])
+            summary = symptom_analysis.get("summary", "")
+            severity_list = symptom_analysis.get("severity_indicators", [])
+            raw_input = symptom_analysis.get("raw_text", "")
+        else:
+            detected_list = getattr(symptom_analysis, "detected_symptoms", [])
+            summary = getattr(symptom_analysis, "summary", "")
+            severity_list = getattr(symptom_analysis, "severity_indicators", [])
+            raw_input = getattr(symptom_analysis, "raw_text", "")
+
+        blob = f"{raw_input} {summary} {' '.join(detected_list)} {' '.join(severity_list)}"
+
+        # 1. Check emergency
+        from app.ai.utils.emergency_detection import detect_emergency, classify_specificity
+        raw_text = raw_input if raw_input else (summary + " " + " ".join(detected_list))
+        
+        is_emergency, flags = detect_emergency(raw_text)
+        if is_emergency:
+            return RiskAssessment(
+                risk_level="HIGH",
+                confidence=0.95,
+                emergency_alert=True,
+                red_flags_detected=flags,
+                recommended_specialist="Emergency Department",
+                reasoning=f"Emergency red flags detected: {', '.join(flags)}",
+                instructions="CALL EMERGENCY SERVICES (911) IMMEDIATELY.",
+                needs_followup=False
+            )
+            
+        # 2. Check specificity
+        specificity = classify_specificity(raw_text)
+        if specificity == "VAGUE":
+            return RiskAssessment(
+                risk_level="MODERATE",
+                confidence=0.40,
+                emergency_alert=False,
+                red_flags_detected=[],
+                recommended_specialist="General Practitioner",
+                reasoning="Symptoms provided are too vague for an accurate assessment.",
+                instructions="Please describe your symptoms in more detail: what exactly you feel, where, for how long, and how severe it is. Seek immediate care if symptoms are severe, sudden, or worsening.",
+                needs_followup=True
+            )
 
         best_entry, best_kw = lookup_triage(blob)
 
@@ -107,6 +146,7 @@ class MockProvider(BaseProvider):
             recommended_specialist=specialist_hint,
             reasoning=reasoning,
             instructions=instructions,
+            needs_followup=False
         )
 
     # ------------------------------------------------------------------

@@ -28,12 +28,14 @@ export interface AnalysisData {
   specialist: string
   specialist_explanation: string
   emergency: boolean
+  needs_followup?: boolean
   instructions?: string | null
   summary_explanation: string
   personalized_home_care: string[]
   personalized_lifestyle: string[]
   monitoring_guidance: string[]
   status?: string
+  provider_used?: string
 }
 
 export interface AnalysisResponse extends ApiResponse<AnalysisData> {}

@@ -9,5 +9,6 @@ class SymptomAnalysis(BaseModel):
     detected_symptoms: List[str]
     confidence: float  # 0-100
     summary: str
+    raw_text: str = ""
     severity_indicators: List[str] = []
     affected_systems: List[str] = []

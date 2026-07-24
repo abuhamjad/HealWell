@@ -84,7 +84,7 @@ export function Analysis() {
           date: new Date().toISOString().split('T')[0],
           symptoms,
           riskLevel,
-          confidence: analysisData.confidence <= 1 ? Number((analysisData.confidence * 100).toFixed(0)) : Math.round(analysisData.confidence),
+          confidence: analysisData.confidence,
           summary: analysisData.summary_explanation,
           specialist: analysisData.specialist,
           specialistIcon: riskLevel === 'high' ? '🫀' : riskLevel === 'moderate' ? '⚠️' : '✓',
@@ -100,6 +100,7 @@ export function Analysis() {
           confidenceExplanation: 'Confidence assessment completed.',
           riskExplanation: analysisData.reasoning,
           specialistExplanation: analysisData.specialist_explanation,
+          provider_used: analysisData.provider_used || 'mock',
         } as any)
       }
 
@@ -297,6 +298,14 @@ export function Analysis() {
               </button>
             </div>
 
+            {result.provider_used === 'mock' && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                className="glass rounded-2xl p-4 border border-yellow-500/40 bg-yellow-500/10 mb-6 flex items-center gap-3 text-yellow-300 text-sm font-medium">
+                <AlertTriangle size={18} className="text-yellow-400 flex-shrink-0" />
+                <span>⚠️ Limited offline analysis — AI service unavailable</span>
+              </motion.div>
+            )}
+
             {result.emergency && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                 className="glass rounded-2xl p-5 border border-red-500/48 bg-red-500/08 mb-6 flex items-start gap-4">
@@ -318,7 +327,7 @@ export function Analysis() {
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
                 className="glass rounded-2xl p-5 flex flex-col">
                 <div className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.38)' }}>AI Confidence</div>
-                <div className="text-xl font-bold gradient-text mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>{result.confidence}%</div>
+                <div className="text-xl font-bold gradient-text mb-3" style={{ fontFamily: 'Manrope, sans-serif' }}>{(result.confidence * 100).toFixed(0)}%</div>
                 <div className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.48)' }}>
                   {(result as any).confidenceExplanation || 'Confidence assessment completed.'}
                 </div>

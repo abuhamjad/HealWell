@@ -13,3 +13,6 @@ class RiskAssessment(BaseModel):
     recommended_specialist: str
     reasoning: str
     instructions: str
+    needs_followup: bool = False
+    provider_used: str = "mock"
+    reasoning_steps: List[str] = []

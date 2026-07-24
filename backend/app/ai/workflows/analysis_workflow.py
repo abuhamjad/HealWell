@@ -63,11 +63,15 @@ class AnalysisWorkflow:
                 specialist_recommendation=specialist_recommendation,
             )
 
+        risk_level_str = (risk_assessment.risk_level or "").upper() if risk_assessment else "LOW"
+        is_emergency = (risk_level_str == "HIGH") or getattr(risk_assessment, "emergency_alert", False)
+
         return AnalysisResult(
             analysis_id=session_id,
             risk_assessment=risk_assessment,
             specialist_recommendation=specialist_recommendation,
             health_report=health_report,
-            emergency_alert=risk_assessment.risk_level == "high",
+            emergency_alert=is_emergency,
+            provider_used=getattr(risk_assessment, "provider_used", "mock"),
         )
 

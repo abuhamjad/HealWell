@@ -15,7 +15,9 @@ class AnalysisResponse(BaseModel):
     specialist: str
     specialist_explanation: str
     emergency: bool
+    needs_followup: bool = False
     instructions: Optional[str] = None
+    provider_used: Optional[str] = "mock"
     status: str = "success"
 
     # Full report content

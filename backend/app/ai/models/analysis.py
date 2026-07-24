@@ -27,6 +27,7 @@ class AnalysisResult(BaseModel):
     health_report: Optional["HealthReport"] = None  # type: ignore
     emergency_alert: bool = False
     emergency_message: Optional[str] = None
+    provider_used: str = "mock"
 
 
 # Update forward references after all models are loaded

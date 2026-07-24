@@ -18,6 +18,7 @@ export interface AnalysisResult {
   monitor: string[]
   nearbyDoctors: Doctor[]
   agentOutputs: AgentOutput[]
+  provider_used?: string
 }
 
 export interface Doctor {

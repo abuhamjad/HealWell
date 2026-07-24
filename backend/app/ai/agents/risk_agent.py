@@ -45,33 +45,57 @@ class RiskAgent(BaseAgent):
             risk_result = await provider.analyze_risk_structured(symptom_analysis)
 
             # Safety Guardrail: use medical triage DB to enforce correct risk
-            from app.ai.providers.medical_triage import lookup_triage, detect_emergency
+            from app.ai.providers.medical_triage import lookup_triage
+            from app.ai.utils.emergency_detection import detect_emergency, classify_specificity
+            
             user_input = (state.get("user_input") or "")
             symptom_summary = str(symptom_analysis.get("summary", ""))
             detected_str = " ".join(symptom_analysis.get("detected_symptoms", []))
             full_text = f"{user_input} {symptom_summary} {detected_str}"
 
-            triage_entry, matched_kw = lookup_triage(full_text)
-            is_emergency, red_flags = detect_emergency(full_text)
+            eval_text = user_input if user_input else full_text
 
-            is_high_risk = is_emergency or (triage_entry and triage_entry.risk_level == "high")
-
-            if is_high_risk and risk_result.risk_level != "HIGH":
-                matched_reason = " | ".join(red_flags) if is_emergency else (matched_kw.title() if matched_kw else "Critical symptom combination")
-                logger.warning(f"Safety guardrail: triage DB matched '{matched_reason}' as HIGH risk. Overriding provider result.")
+            # Check emergency first
+            is_emergency, red_flags = detect_emergency(eval_text)
+            
+            # Then specificity
+            specificity = classify_specificity(eval_text)
+            
+            # Always force HIGH if emergency
+            if is_emergency:
+                logger.warning(f"Safety guardrail: detect_emergency triggered on '{', '.join(red_flags)}'. Overriding provider result to HIGH.")
                 risk_result.risk_level = "HIGH"
                 risk_result.confidence = max(risk_result.confidence, 0.95)
                 risk_result.emergency_alert = True
                 risk_result.instructions = "CALL EMERGENCY SERVICES (911) IMMEDIATELY."
-                risk_result.reasoning = f"Evaluated as HIGH RISK — {matched_reason} is a potentially life-threatening condition."
-                
-                # Merge warning signs into red_flags_detected without duplicates
-                current_flags = set(risk_result.red_flags_detected) if hasattr(risk_result, 'red_flags_detected') else set()
-                if is_emergency:
-                    current_flags.update(red_flags)
-                if triage_entry:
-                    current_flags.update(triage_entry.warning_signs)
+                risk_result.reasoning = f"Evaluated as HIGH RISK — Emergency red flags detected: {', '.join(red_flags)}"
+                risk_result.needs_followup = False
+                current_flags = set(getattr(risk_result, 'red_flags_detected', []))
+                current_flags.update(red_flags)
                 risk_result.red_flags_detected = list(current_flags)
+            elif specificity == "VAGUE":
+                logger.warning("Safety guardrail: vague input detected, escalating from LOW (if any) to MODERATE.")
+                if risk_result.risk_level == "LOW":
+                    risk_result.risk_level = "MODERATE"
+                    risk_result.confidence = 0.40
+                    risk_result.emergency_alert = False
+                    risk_result.instructions = "Please describe your symptoms in more detail: what exactly you feel, where, for how long, and how severe it is. Seek immediate care if symptoms are severe, sudden, or worsening."
+                    risk_result.reasoning = "Symptoms provided are too vague for an accurate assessment."
+                    risk_result.needs_followup = True
+            else:
+                # If neither emergency nor vague, do a standard medical triage lookup to see if we missed a high risk
+                triage_entry, matched_kw = lookup_triage(full_text)
+                if triage_entry and triage_entry.risk_level == "high" and risk_result.risk_level != "HIGH":
+                    logger.warning(f"Safety guardrail: triage DB matched '{matched_kw}' as HIGH risk. Overriding provider result.")
+                    risk_result.risk_level = "HIGH"
+                    risk_result.confidence = max(risk_result.confidence, 0.95)
+                    risk_result.emergency_alert = True
+                    risk_result.instructions = "CALL EMERGENCY SERVICES (911) IMMEDIATELY."
+                    risk_result.reasoning = f"Evaluated as HIGH RISK — {matched_kw.title()} is a potentially life-threatening condition."
+                    risk_result.needs_followup = False
+                    current_flags = set(getattr(risk_result, 'red_flags_detected', []))
+                    current_flags.update(triage_entry.warning_signs)
+                    risk_result.red_flags_detected = list(current_flags)
 
             state["risk_assessment"] = risk_result
             state["current_step"] = "risk_assessment"

@@ -5,6 +5,7 @@ Each entry maps a symptom/condition phrase to its risk level, specialist, affect
 severity indicators, and warning signs.
 """
 
+import re
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -309,6 +310,7 @@ def lookup_triage(text: str) -> tuple[Optional[TriageEntry], Optional[str]]:
     Checks all entries and returns the one with the highest risk level.
     Returns (entry, matched_keyword) or (None, None) if no match.
     """
+    from app.ai.utils.emergency_detection import is_negated_or_non_current
     text_lower = text.lower()
 
     best_entry: Optional[TriageEntry] = None
@@ -316,80 +318,35 @@ def lookup_triage(text: str) -> tuple[Optional[TriageEntry], Optional[str]]:
     risk_priority = {"high": 3, "moderate": 2, "low": 1}
 
     for keyword, entry in TRIAGE_DB.items():
-        if keyword in text_lower:
-            entry_priority = risk_priority.get(entry.risk_level, 0)
-            best_priority = risk_priority.get(best_entry.risk_level, 0) if best_entry else 0
-            if entry_priority > best_priority:
-                best_entry = entry
-                best_keyword = keyword
-            elif entry_priority == best_priority and best_keyword and len(keyword) > len(best_keyword):
-                # Prefer longer (more specific) match at same risk level
-                best_entry = entry
-                best_keyword = keyword
+        pattern = r'\b' + re.escape(keyword) + r'\b'
+        for match in re.finditer(pattern, text_lower):
+            if not is_negated_or_non_current(text_lower, match.start(), match.end()):
+                entry_priority = risk_priority.get(entry.risk_level, 0)
+                best_priority = risk_priority.get(best_entry.risk_level, 0) if best_entry else 0
+                if entry_priority > best_priority:
+                    best_entry = entry
+                    best_keyword = keyword
+                elif entry_priority == best_priority and best_keyword and len(keyword) > len(best_keyword):
+                    # Prefer longer (more specific) match at same risk level
+                    best_entry = entry
+                    best_keyword = keyword
 
     return best_entry, best_keyword
 
 
 def collect_all_matches(text: str) -> list[tuple[str, TriageEntry]]:
     """Collect ALL matching triage entries for the given text, sorted by risk (highest first)."""
+    from app.ai.utils.emergency_detection import is_negated_or_non_current
     text_lower = text.lower()
     risk_priority = {"high": 3, "moderate": 2, "low": 1}
     matches = []
     for keyword, entry in TRIAGE_DB.items():
-        if keyword in text_lower:
-            matches.append((keyword, entry))
+        pattern = r'\b' + re.escape(keyword) + r'\b'
+        for match in re.finditer(pattern, text_lower):
+            if not is_negated_or_non_current(text_lower, match.start(), match.end()):
+                matches.append((keyword, entry))
+                break
     matches.sort(key=lambda x: risk_priority.get(x[1].risk_level, 0), reverse=True)
     return matches
 
 
-# Group keywords by BODY PART and by SYMPTOM TYPE, then check for co-occurrence
-CARDIAC_TERMS = [
-    "heart", "chest", "cardiac", "sternum", "breastbone"
-]
-PAIN_TERMS = [
-    "pain", "ache", "aching", "hurt", "hurts", "hurting", "pressure", 
-    "tightness", "tight", "squeezing", "burning", "discomfort", "heavy", "heaviness"
-]
-BREATH_TERMS = [
-    "breath", "breathing", "breathe", "gasping", "suffocating", "choking"
-]
-NEURO_TERMS = [
-    "stroke", "slurred", "droop", "numbness", "numb", "weakness", "confusion"
-]
-CONSCIOUSNESS_TERMS = [
-    "unconscious", "fainted", "fainting", "passed out", "seizure", "convulsing"
-]
-
-EXPLICIT_EMERGENCY_PHRASES = [
-    "heart attack", "myocardial infarction", "cardiac arrest", 
-    "anaphylaxis", "overdose", "suicidal", "can't breathe", "cant breathe"
-]
-
-def detect_emergency(text: str) -> tuple[bool, list[str]]:
-    text_lower = text.lower()
-    flags = []
-
-    # 1. Explicit phrase match (fast path)
-    for phrase in EXPLICIT_EMERGENCY_PHRASES:
-        if phrase in text_lower:
-            flags.append(phrase)
-
-    # 2. Conceptual match: body part + symptom co-occurring anywhere in the text
-    #    e.g. "pain in my heart", "heart hurts", "chest feels tight"
-    has_cardiac_area = any(term in text_lower for term in CARDIAC_TERMS)
-    has_pain = any(term in text_lower for term in PAIN_TERMS)
-    if has_cardiac_area and has_pain:
-        flags.append(f"cardiac-area pain (matched region + pain terms)")
-
-    has_breath_issue = any(term in text_lower for term in BREATH_TERMS)
-    if has_breath_issue and ("difficult" in text_lower or "can't" in text_lower 
-                               or "cant" in text_lower or "short" in text_lower):
-        flags.append("breathing difficulty")
-
-    if any(term in text_lower for term in NEURO_TERMS):
-        flags.append("neurological red flag")
-
-    if any(term in text_lower for term in CONSCIOUSNESS_TERMS):
-        flags.append("loss of consciousness / seizure")
-
-    return (len(flags) > 0, flags)
