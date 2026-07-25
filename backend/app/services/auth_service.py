@@ -5,10 +5,10 @@ RESPONSIBILITY: Authentication business logic only.
 This service orchestrates security module functions for authentication operations.
 It does NOT contain cryptographic logic - that belongs in app/core/security.py.
 
-Future implementations of register, login, token refresh, and password change
+Future implementations of login, token refresh, and password change
 will be added to this service as new methods.
 
-Current state: Helper methods only, no endpoints implemented.
+Current state: User registration implemented, other endpoints in future milestones.
 
 RESPONSIBILITY SPLIT:
 - app/core/security.py: Password hashing, JWT creation/validation, OAuth2 config
@@ -19,6 +19,9 @@ DO NOT duplicate security module functionality in this service.
 
 from typing import Optional
 from uuid import UUID
+import logging
+
+from sqlalchemy.orm import Session
 
 from app.core.security import (
     hash_password,
@@ -26,6 +29,11 @@ from app.core.security import (
     create_access_token,
     verify_access_token,
 )
+from app.core.exceptions import EmailAlreadyExistsError, UsernameAlreadyExistsError
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth import UserRegisterRequest, UserRegisterResponse
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -35,15 +43,26 @@ class AuthService:
     It uses security module functions (hash_password, verify_password, etc.)
     but does NOT implement cryptography itself.
 
-    Future methods in this service:
+    Implemented methods:
     - register_user(): User registration business logic
+
+    Future methods in this service:
     - login_user(): User login business logic
     - authenticate_user(): Validate credentials
     - change_password(): Password change business logic
 
     Current helper methods are wrappers for security module functions.
-    They prepare data and types for future business logic methods.
+    They prepare data and types for business logic methods.
     """
+
+    def __init__(self, session: Session):
+        """Initialize AuthService with database session.
+
+        Args:
+            session: SQLAlchemy database session
+        """
+        self.session = session
+        self.user_repository = UserRepository(session)
 
     @staticmethod
     def hash_user_password(password: str) -> str:
@@ -133,3 +152,68 @@ class AuthService:
         """
         subject = verify_access_token(token)
         return subject
+
+    def register_user(self, request: UserRegisterRequest) -> UserRegisterResponse:
+        """Register a new user account.
+
+        Email normalization:
+        - Trimmed of leading/trailing whitespace
+        - Converted to lowercase
+        - Checked for uniqueness (case-insensitive)
+
+        Username normalization:
+        - Trimmed of leading/trailing whitespace
+        - Checked for uniqueness (case-sensitive per policy)
+
+        Password is hashed using security module.
+        User is persisted to database, then returned safely.
+
+        Args:
+            request: User registration request with email, username, password
+
+        Returns:
+            UserRegisterResponse with user id, email, username, created_at
+
+        Raises:
+            EmailAlreadyExistsError: If email already registered
+            UsernameAlreadyExistsError: If username already taken
+        """
+        # Normalize email: trim whitespace and convert to lowercase
+        normalized_email = request.email.strip().lower()
+
+        # Normalize username: trim whitespace only (preserve case)
+        normalized_username = request.username.strip()
+
+        # Check email uniqueness (case-insensitive due to normalization)
+        if self.user_repository.exists_by_email(normalized_email):
+            logger.warning(f"Registration attempt with duplicate email: {normalized_email}")
+            raise EmailAlreadyExistsError(normalized_email)
+
+        # Check username uniqueness
+        if self.user_repository.exists_by_username(normalized_username):
+            logger.warning(f"Registration attempt with duplicate username: {normalized_username}")
+            raise UsernameAlreadyExistsError(normalized_username)
+
+        # Hash password using security module
+        hashed_password = self.hash_user_password(request.password)
+
+        # Create user in database with normalized values
+        user = self.user_repository.create_user(
+            email=normalized_email,
+            username=normalized_username,
+            hashed_password=hashed_password,
+        )
+
+        # Commit transaction to generate id and timestamps
+        self.session.commit()
+        self.session.refresh(user)
+
+        logger.info(f"New user registered: {user.id} ({normalized_email})")
+
+        # Return safe response without password or hash
+        return UserRegisterResponse(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            created_at=user.created_at,
+        )

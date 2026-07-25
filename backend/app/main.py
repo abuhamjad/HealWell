@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.constants import API_TITLE, API_VERSION
+from app.core.exception_handlers import register_exception_handlers
 from app.api.router import api_router
 from app.schemas.response import ApiResponse, success_response
 
@@ -10,6 +11,9 @@ app = FastAPI(
     version=settings.API_VERSION,
     debug=settings.DEBUG
 )
+
+# Register global exception handlers
+register_exception_handlers(app)
 
 # Configure CORS with environment-specific settings
 cors_config = dict(
