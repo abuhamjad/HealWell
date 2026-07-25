@@ -4,8 +4,8 @@ import { User, FileText, Heart, Users, Save, AlertCircle } from 'lucide-react'
 
 export function Profile() {
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
+    fullName: '',
+    preferredName: '',
     dateOfBirth: '',
     gender: 'male',
     height: '',
@@ -48,8 +48,8 @@ export function Profile() {
               </div>
               <div className="space-y-4">
                 {[
-                  { name: 'name', label: 'Full Name', placeholder: 'John Doe', type: 'text' },
-                  { name: 'age', label: 'Age', placeholder: '28', type: 'number' },
+                  { name: 'fullName', label: 'Full Name', placeholder: 'John Doe', type: 'text' },
+                  { name: 'preferredName', label: 'Preferred Name', placeholder: 'John', type: 'text' },
                   { name: 'dateOfBirth', label: 'Date of Birth', placeholder: 'MM/DD/YYYY', type: 'text' },
                   { name: 'height', label: 'Height (cm)', placeholder: '175', type: 'number' },
                   { name: 'weight', label: 'Weight (kg)', placeholder: '72', type: 'number' },
