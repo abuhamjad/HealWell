@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 from app.ai.models import RiskAssessment, SpecialistRecommendation, HealthReport
 
 
@@ -15,7 +16,26 @@ class AnalysisRequest(BaseModel):
 
 
 class AnalysisResponse(BaseModel):
-    analysis_id: str
+    """Health analysis response.
+
+    Combines AI-generated analysis with database persistence information.
+
+    Includes:
+    - analysis_id: Database ID (for history and detail queries)
+    - Risk assessment from AI engine
+    - Specialist recommendations from AI engine
+    - Health report from AI engine
+    - created_at: When analysis was persisted
+    - status: Success indicator
+
+    Never includes:
+    - Internal AI prompts
+    - Model configuration
+    - Stack traces
+    - User ID (client already knows their own ID)
+    """
+
+    analysis_id: str  # Database ID for tracking
     # Flat fields retained for the existing frontend contract
     risk_level: str
     confidence: float
@@ -27,6 +47,8 @@ class AnalysisResponse(BaseModel):
     specialist_recommendation: SpecialistRecommendation
     health_report: HealthReport
     emergency_message: Optional[str] = None
+    # Database persistence information
+    created_at: datetime  # When analysis was persisted to database
 
 
 class AnalysisHistoryItem(BaseModel):

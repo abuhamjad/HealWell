@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.schemas.analysis import (
@@ -33,29 +34,47 @@ async def create_analysis(
     Protected endpoint - requires JWT authentication.
     Analysis is automatically associated with the authenticated user.
 
-    Delegates to AnalysisService which orchestrates AI workflow and persists to database.
+    INTEGRATION FLOW:
+    1. Validate authentication (dependency)
+    2. Delegate to AnalysisService
+    3. Service orchestrates AI analysis
+    4. Service persists to database
+    5. Return response with AI results and database info
+
+    Never exposes:
+    - User ID (client already knows theirs)
+    - Internal AI prompts
+    - Model configuration
+    - Stack traces
     """
     # Initialize service with dependency-injected session
     analysis_service = AnalysisService(session=session)
 
     # Delegate to service layer
+    # Service orchestrates: AI execution → Persistence → Response
     # Always use current_user.id - never trust client-supplied user_id
-    result = await analysis_service.analyze(
+    output = await analysis_service.analyze(
         symptoms=request.symptoms,
         user_id=str(current_user.id),
     )
 
-    # Convert to response format, serializing the existing AI models as-is
+    # Use database-persisted analysis for response (if persisted)
+    # Otherwise use AI result with placeholder timestamp
+    analysis_id_for_response = str(output.analysis.id) if output.analysis else output.ai_result.analysis_id
+    created_at_for_response = output.analysis.created_at if output.analysis else datetime.utcnow()
+
+    # Convert to response format, combining AI results with database information
     analysis_data = AnalysisResponse(
-        analysis_id=result.analysis_id,
-        risk_level=result.risk_assessment.risk_level,
-        confidence=result.risk_assessment.confidence,
-        specialist=result.specialist_recommendation.specialist,
-        emergency=result.emergency_alert,
-        risk_assessment=result.risk_assessment,
-        specialist_recommendation=result.specialist_recommendation,
-        health_report=result.health_report,
-        emergency_message=result.emergency_message,
+        analysis_id=analysis_id_for_response,
+        risk_level=output.ai_result.risk_assessment.risk_level,
+        confidence=output.ai_result.risk_assessment.confidence,
+        specialist=output.ai_result.specialist_recommendation.specialist,
+        emergency=output.ai_result.emergency_alert,
+        risk_assessment=output.ai_result.risk_assessment,
+        specialist_recommendation=output.ai_result.specialist_recommendation,
+        health_report=output.ai_result.health_report,
+        emergency_message=output.ai_result.emergency_message,
+        created_at=created_at_for_response,
     )
     return success_response(message=SUCCESS_ANALYSIS_CREATED, data=analysis_data)
 

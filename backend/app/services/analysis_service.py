@@ -38,8 +38,10 @@ class AnalysisService:
         self.workflow = AnalysisWorkflow()
         self.analysis_repo = AnalysisRepository(session)
 
-    async def analyze(self, symptoms: str, user_id: Optional[str] = None) -> AnalysisResult:
+    async def analyze(self, symptoms: str, user_id: Optional[str] = None) -> AnalysisOutput:
         """Perform health analysis and persist to database.
+
+        SERVICE RESPONSIBILITY: Orchestrate AI analysis and persistence.
 
         Executes AI workflow and automatically saves results to PostgreSQL.
         If persistence fails, logs the error but still returns the analysis result.
@@ -49,7 +51,8 @@ class AnalysisService:
             user_id: Optional user ID (uses placeholder UUID if not provided).
 
         Returns:
-            AnalysisResult from AI workflow (guaranteed, even if DB save fails).
+            AnalysisOutput with both AI result and persisted Analysis record.
+            AI result is guaranteed; Analysis record is best-effort.
         """
         input_data = AnalysisInput(
             symptoms=symptoms,
@@ -57,29 +60,37 @@ class AnalysisService:
         )
 
         # Execute workflow via LangGraph
+        logger.info(f"Starting AI analysis: user={user_id}")
         result = await self.workflow.execute(input_data)
+        logger.info(f"AI analysis completed: risk_level={result.risk_assessment.risk_level if result.risk_assessment else 'unknown'}")
 
         # Persist result to database (best-effort, never fails the analysis)
+        analysis = None
         try:
-            self._persist_analysis(result, symptoms, user_id)
+            analysis = self._persist_analysis(result, symptoms, user_id)
         except Exception as e:
             self.session.rollback()
             logger.exception(f"Failed to persist analysis to database: {str(e)}")
 
-        return result
+        return AnalysisOutput(ai_result=result, analysis=analysis)
 
     def _persist_analysis(
         self,
         result: AnalysisResult,
         symptoms: str,
         user_id: Optional[str] = None,
-    ) -> None:
+    ) -> Analysis:
         """Persist analysis result to database.
+
+        SERVICE RESPONSIBILITY: Save AI analysis to database and associate with user.
 
         Args:
             result: AnalysisResult from AI workflow.
             symptoms: Original symptom input string.
             user_id: Optional user ID (uses placeholder UUID if not provided).
+
+        Returns:
+            Persisted Analysis model with all database fields (id, created_at, etc.).
 
         Raises:
             Any exception from database operations (caller handles with try/except).
@@ -88,6 +99,8 @@ class AnalysisService:
         analysis_user_id = (
             UUID(user_id) if user_id else uuid4()
         )
+
+        logger.debug(f"Persisting analysis for user: {analysis_user_id}")
 
         # Convert Pydantic models to dicts for JSONB storage
         risk_assessment_dict = result.risk_assessment.model_dump() if result.risk_assessment else None
@@ -112,13 +125,15 @@ class AnalysisService:
         # Commit transaction
         self.session.commit()
 
-        # Refresh to populate auto-generated fields (id, created_at)
+        # Refresh to populate auto-generated fields (id, created_at, updated_at)
         self.session.refresh(analysis)
 
         logger.info(
             f"Analysis persisted: id={analysis.id}, user_id={analysis_user_id}, "
-            f"risk_level={analysis.risk_level}"
+            f"risk_level={analysis.risk_level}, created_at={analysis.created_at}"
         )
+
+        return analysis
 
     def get_history(
         self,
