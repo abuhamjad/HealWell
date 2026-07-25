@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 5
     DATABASE_MAX_OVERFLOW: int = 10
 
+    # ========== AUTHENTICATION CONFIGURATION (v0.10.2+) ==========
+    SECRET_KEY: str  # Must be set in environment, no default for security
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
     # ========== LOGGING CONFIGURATION ==========
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"  # json | text

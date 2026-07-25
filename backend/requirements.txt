@@ -8,3 +8,6 @@ openai>=2.46.0
 sqlalchemy==2.0.23
 alembic==1.13.1
 psycopg[binary]==3.3.4
+pwdlib[argon2]==0.2.0
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
