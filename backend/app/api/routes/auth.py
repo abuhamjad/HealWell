@@ -13,7 +13,7 @@ import logging
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
-from app.schemas.auth import UserRegisterRequest, UserRegisterResponse
+from app.schemas.auth import UserRegisterRequest, UserRegisterResponse, UserLoginRequest, UserLoginResponse
 from app.schemas.response import ApiResponse, success_response
 from app.services.auth_service import AuthService
 from app.database import get_db
@@ -79,4 +79,54 @@ async def register_user(
     return success_response(
         data=user_response,
         message="User registered successfully",
+    )
+
+
+@router.post("/login", response_model=ApiResponse, status_code=200)
+async def login_user(
+    request: UserLoginRequest,
+    session: Session = Depends(get_db),
+) -> ApiResponse:
+    """Authenticate user and return JWT access token.
+
+    Email Normalization:
+    - Trimmed of whitespace
+    - Converted to lowercase
+
+    Password Verification:
+    - Uses Argon2 constant-time comparison
+    - Prevents timing attacks
+
+    Security:
+    - Never reveals if email exists or password incorrect
+    - Always returns same error message
+    - Prevents user enumeration
+
+    Success Response:
+    - HTTP 200 OK
+    - Body: UserLoginResponse with access_token, token_type, expires_in, user
+
+    Args:
+        request: User login request (email, password)
+        session: Database session (dependency-injected)
+
+    Returns:
+        ApiResponse with UserLoginResponse containing JWT and user info
+
+    Raises:
+        InvalidCredentialsError: Caught by global handler → HTTP 401
+        Unexpected Exception: Caught by global handler → HTTP 500
+    """
+    # Initialize service with dependency-injected session
+    auth_service = AuthService(session=session)
+
+    # Delegate to service layer for login business logic.
+    # If authentication fails, service raises InvalidCredentialsError.
+    # Global exception handlers convert to HTTP 401.
+    login_response = auth_service.login_user(request)
+
+    # Return successful response with 200 status
+    return success_response(
+        data=login_response,
+        message="Login successful",
     )

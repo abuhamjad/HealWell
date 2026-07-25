@@ -87,6 +87,41 @@ class Token(BaseModel):
     token_type: str = Field(default="bearer", description="Token type (always 'bearer')")
 
 
+class UserLoginRequest(BaseModel):
+    """User login request.
+
+    Contains credentials for user authentication.
+    """
+
+    email: EmailStr = Field(
+        ...,
+        description="User's email address (normalized: trimmed, lowercase)",
+        min_length=5,
+        max_length=255,
+    )
+    password: str = Field(
+        ...,
+        description="User's password",
+        min_length=1,
+        max_length=128,
+    )
+
+
+class UserLoginResponse(BaseModel):
+    """User login response.
+
+    Contains JWT access token and user information (no password/hash).
+    """
+
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field(default="bearer", description="Token type (always 'bearer')")
+    expires_in: int = Field(..., description="Token expiration time in seconds")
+    user: UserRegisterResponse = Field(..., description="Authenticated user information")
+
+    class Config:
+        from_attributes = True
+
+
 class TokenData(BaseModel):
     """Decoded JWT token data.
 

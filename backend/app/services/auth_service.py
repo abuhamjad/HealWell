@@ -20,6 +20,7 @@ DO NOT duplicate security module functionality in this service.
 from typing import Optional
 from uuid import UUID
 import logging
+from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
@@ -29,9 +30,10 @@ from app.core.security import (
     create_access_token,
     verify_access_token,
 )
-from app.core.exceptions import EmailAlreadyExistsError, UsernameAlreadyExistsError
+from app.core.config import settings
+from app.core.exceptions import EmailAlreadyExistsError, UsernameAlreadyExistsError, InvalidCredentialsError
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import UserRegisterRequest, UserRegisterResponse
+from app.schemas.auth import UserRegisterRequest, UserRegisterResponse, UserLoginRequest, UserLoginResponse
 
 logger = logging.getLogger(__name__)
 
@@ -216,4 +218,68 @@ class AuthService:
             email=user.email,
             username=user.username,
             created_at=user.created_at,
+        )
+
+    def login_user(self, request: UserLoginRequest) -> UserLoginResponse:
+        """Authenticate user and return JWT access token.
+
+        Email normalization:
+        - Trimmed of leading/trailing whitespace
+        - Converted to lowercase
+
+        Password verification:
+        - Uses security module's verify_password()
+        - Constant-time comparison (no timing attacks)
+
+        Token generation:
+        - Uses security module's create_access_token()
+        - Payload includes sub (user_id), iat, exp
+
+        Security:
+        - Never reveals if email exists or password incorrect
+        - Always returns same error message for auth failures
+        - Prevents user enumeration attacks
+
+        Args:
+            request: User login request with email and password
+
+        Returns:
+            UserLoginResponse with access_token, token_type, expires_in, user
+
+        Raises:
+            InvalidCredentialsError: If email not found or password incorrect
+        """
+        # Normalize email: trim whitespace and convert to lowercase
+        normalized_email = request.email.strip().lower()
+
+        # Find user by normalized email
+        user = self.user_repository.get_by_email(normalized_email)
+
+        # Verify user exists and password matches
+        # Use same error for both cases to prevent user enumeration
+        if not user or not self.verify_user_password(request.password, user.hashed_password):
+            logger.warning(f"Failed login attempt: {normalized_email}")
+            raise InvalidCredentialsError("Invalid email or password")
+
+        # Generate JWT access token
+        access_token = self.generate_access_token(user.id)
+
+        # Calculate token expiration in seconds
+        expires_in = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+
+        logger.info(f"User logged in: {user.id} ({normalized_email})")
+
+        # Return login response with token and user information
+        user_response = UserRegisterResponse(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            created_at=user.created_at,
+        )
+
+        return UserLoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=expires_in,
+            user=user_response,
         )
