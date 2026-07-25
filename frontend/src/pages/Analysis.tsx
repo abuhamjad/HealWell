@@ -85,17 +85,41 @@ export function Analysis() {
           symptoms,
           riskLevel,
           confidence: analysisData.confidence,
-          summary: `Analysis received: Risk level is ${riskLevel}. Specialist recommended: ${analysisData.specialist}`,
+          summary: analysisData?.health_report?.summary ?? `Analysis received: Risk level is ${riskLevel}. Specialist recommended: ${analysisData.specialist}`,
           specialist: analysisData.specialist,
           specialistIcon: riskLevel === 'high' ? '🫀' : riskLevel === 'moderate' ? '⚠️' : '✓',
           emergency: analysisData.emergency,
-          emergencyNote: analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : '',
-          homeCare: ['Rest adequately', 'Stay well-hydrated', 'Monitor symptoms', 'Follow specialist recommendations'],
-          lifestyle: ['Maintain healthy habits', 'Manage stress', 'Regular exercise', 'Adequate sleep'],
-          monitor: ['Symptom progression', 'Any new symptoms', 'Severity changes', 'Follow-up care'],
+          emergencyNote: analysisData?.emergency_message ?? (analysisData.emergency ? 'Please seek emergency care immediately. Call 112.' : ''),
+          homeCare: (analysisData?.health_report?.home_care?.length) ? analysisData.health_report.home_care : ['Rest adequately', 'Stay well-hydrated', 'Monitor symptoms', 'Follow specialist recommendations'],
+          lifestyle: (analysisData?.health_report?.lifestyle?.length) ? analysisData.health_report.lifestyle : ['Maintain healthy habits', 'Manage stress', 'Regular exercise', 'Adequate sleep'],
+          monitor: (analysisData?.health_report?.monitoring?.length) ? analysisData.health_report.monitoring : ['Symptom progression', 'Any new symptoms', 'Severity changes', 'Follow-up care'],
           nearbyDoctors: [],
           agentOutputs: [
-            { agent: 'API Analysis', icon: '🔬', status: 'complete', output: `Analysis complete. Risk: ${riskLevel}`, time: '1.5s' },
+            {
+              agent: 'Risk Assessment',
+              icon: '⚠️',
+              status: 'complete',
+              output: analysisData?.risk_assessment?.reasoning ?? 'Risk assessment completed',
+              time: '1.5s',
+            },
+            {
+              agent: 'Specialist Recommendation',
+              icon: '👨‍⚕️',
+              status: 'complete',
+              output: analysisData?.specialist_recommendation?.reasoning
+                ? analysisData.specialist_recommendation.urgency
+                  ? `${analysisData.specialist_recommendation.reasoning}\n\nUrgency: ${analysisData.specialist_recommendation.urgency}`
+                  : analysisData.specialist_recommendation.reasoning
+                : 'Specialist recommendation completed',
+              time: '1.5s',
+            },
+            {
+              agent: 'Health Report',
+              icon: '📋',
+              status: 'complete',
+              output: analysisData?.health_report?.summary ?? 'Health report generated',
+              time: '1.5s',
+            },
           ],
         })
       }
