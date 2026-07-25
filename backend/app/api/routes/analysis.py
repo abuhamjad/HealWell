@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.schemas.analysis import (
     AnalysisRequest,
@@ -130,6 +130,10 @@ async def get_analysis_detail(
     Protected endpoint - requires JWT authentication.
     Users can only access their own analyses.
 
+    AUTHORIZATION: Enforced by service layer.
+    Ownership check happens in AnalysisService.get_analysis_by_id().
+    Routes must never duplicate authorization logic.
+
     Returns full analysis including all risk assessment, specialist
     recommendation, and health report data stored as JSON.
 
@@ -141,18 +145,13 @@ async def get_analysis_detail(
         Complete analysis with all stored AI-generated data.
 
     Raises:
-        HTTPException: 404 if analysis not found or doesn't belong to user.
+        AnalysisNotFoundError: If analysis not found or doesn't belong to user
+        (caught by global handler → HTTP 404).
     """
     analysis_service = AnalysisService(session=session)
 
-    analysis = analysis_service.get_analysis_by_id(analysis_id)
-
-    # Check if analysis exists and belongs to authenticated user
-    if analysis is None or analysis.user_id != current_user.id:
-        raise HTTPException(
-            status_code=404,
-            detail="Analysis not found",
-        )
+    # Service enforces ownership - raises exception if not found or not owned
+    analysis = analysis_service.get_analysis_by_id(analysis_id, current_user.id)
 
     # Convert Analysis model instance to AnalysisDetailResponse schema
     analysis_detail = AnalysisDetailResponse(

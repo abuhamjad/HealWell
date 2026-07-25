@@ -72,3 +72,54 @@ class InvalidTokenError(AuthenticationException):
     """
 
     pass
+
+
+class ResourceNotFoundError(HealWellException):
+    """Requested resource was not found.
+
+    Base exception for resource not found errors.
+    HTTP Status: 404 Not Found
+    """
+
+    pass
+
+
+class AnalysisNotFoundError(ResourceNotFoundError):
+    """Analysis resource was not found or doesn't belong to user.
+
+    Raised when attempting to access an analysis that:
+    - Does not exist, OR
+    - Does not belong to the requesting user
+
+    Same error for both cases (no information leakage about existence).
+    HTTP Status: 404 Not Found
+    """
+
+    pass
+
+
+class ProfileNotFoundError(ResourceNotFoundError):
+    """User profile was not found.
+
+    Raised when attempting to access or modify a user profile that:
+    - Does not exist
+
+    HTTP Status: 404 Not Found
+    """
+
+    pass
+
+
+class ProfileValidationError(HealWellException):
+    """Profile update validation failed.
+
+    Raised when profile update contains invalid values:
+    - Height out of range
+    - Weight out of range
+    - Date of birth in future
+    - etc.
+
+    HTTP Status: 422 Unprocessable Entity
+    """
+
+    pass

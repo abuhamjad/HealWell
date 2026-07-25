@@ -1,7 +1,7 @@
 """Analysis service for health analysis operations."""
 
 import logging
-from typing import Optional
+from typing import Optional, NamedTuple
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
@@ -10,8 +10,19 @@ from app.ai.models import AnalysisInput, AnalysisResult
 from app.ai.workflows.analysis_workflow import AnalysisWorkflow
 from app.ai.providers.factory import create_provider
 from app.repositories.analysis_repository import AnalysisRepository
+from app.models.analysis import Analysis
 
 logger = logging.getLogger(__name__)
+
+
+class AnalysisOutput(NamedTuple):
+    """Combined AI analysis result and persisted database record.
+
+    Provides both AI-generated analysis and database persistence information.
+    """
+
+    ai_result: AnalysisResult
+    analysis: Optional[Analysis]
 
 
 class AnalysisService:
@@ -145,18 +156,40 @@ class AnalysisService:
             "offset": offset,
         }
 
-    def get_analysis_by_id(self, analysis_id: str):
-        """Get complete analysis by ID.
+    def get_analysis_by_id(self, analysis_id: str, user_id: UUID):
+        """Get complete analysis by ID with ownership verification.
+
+        SERVICE RESPONSIBILITY: Enforce ownership authorization.
+
+        Routes should call this instead of accessing repository directly.
+        Service guarantees returned analysis belongs to the user.
 
         Args:
             analysis_id: UUID of the analysis to retrieve.
+            user_id: UUID of the requesting user (for ownership check).
 
         Returns:
-            Analysis model instance or None if not found.
+            Analysis model instance.
+
+        Raises:
+            ValueError: If analysis_id is not a valid UUID.
+            AnalysisNotFoundError: If analysis not found OR doesn't belong to user.
         """
         try:
             analysis_uuid = UUID(analysis_id)
         except (ValueError, TypeError):
-            return None
+            logger.warning(f"Invalid analysis_id format: {analysis_id}")
+            raise ValueError("Invalid analysis ID format")
 
-        return self.analysis_repo.get_by_id(analysis_uuid)
+        analysis = self.analysis_repo.get_by_id(analysis_uuid)
+
+        # Return 404 for both "not found" and "not owned" (no info leakage)
+        if analysis is None or analysis.user_id != user_id:
+            logger.warning(
+                f"Unauthorized access attempt: user={user_id}, analysis={analysis_uuid}"
+            )
+            from app.core.exceptions import AnalysisNotFoundError
+            raise AnalysisNotFoundError("Analysis not found")
+
+        logger.debug(f"Analysis retrieved: id={analysis_uuid}, user={user_id}")
+        return analysis

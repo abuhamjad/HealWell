@@ -19,6 +19,10 @@ from app.core.exceptions import (
     TokenExpiredError,
     InvalidTokenError,
     AuthenticationException,
+    ResourceNotFoundError,
+    AnalysisNotFoundError,
+    ProfileNotFoundError,
+    ProfileValidationError,
     HealWellException,
 )
 
@@ -145,6 +149,76 @@ def register_exception_handlers(app: FastAPI) -> None:
             content=create_error_response(
                 code="AUTHENTICATION_ERROR",
                 message="Authentication failed",
+            ),
+        )
+
+    @app.exception_handler(ProfileValidationError)
+    async def handle_profile_validation_error(
+        request: Request,
+        exc: ProfileValidationError,
+    ) -> JSONResponse:
+        """Handle profile validation errors (HTTP 422).
+
+        Invalid profile data (height, weight, date of birth, etc.).
+        """
+        logger.warning(f"Profile validation error: {str(exc)}")
+        return JSONResponse(
+            status_code=422,
+            content=create_error_response(
+                code="PROFILE_VALIDATION_ERROR",
+                message=str(exc),
+            ),
+        )
+
+    @app.exception_handler(ProfileNotFoundError)
+    async def handle_profile_not_found(
+        request: Request,
+        exc: ProfileNotFoundError,
+    ) -> JSONResponse:
+        """Handle profile not found errors (HTTP 404)."""
+        logger.warning(f"Profile not found: {request.url.path}")
+        return JSONResponse(
+            status_code=404,
+            content=create_error_response(
+                code="PROFILE_NOT_FOUND",
+                message="Profile not found",
+            ),
+        )
+
+    @app.exception_handler(AnalysisNotFoundError)
+    async def handle_analysis_not_found(
+        request: Request,
+        exc: AnalysisNotFoundError,
+    ) -> JSONResponse:
+        """Handle analysis not found errors (HTTP 404).
+
+        Covers both:
+        - Analysis doesn't exist
+        - Analysis doesn't belong to authenticated user
+
+        Same error for both cases (no information leakage about existence).
+        """
+        logger.warning(f"Analysis not found or unauthorized access: {request.url.path}")
+        return JSONResponse(
+            status_code=404,
+            content=create_error_response(
+                code="ANALYSIS_NOT_FOUND",
+                message="Analysis not found",
+            ),
+        )
+
+    @app.exception_handler(ResourceNotFoundError)
+    async def handle_resource_not_found(
+        request: Request,
+        exc: ResourceNotFoundError,
+    ) -> JSONResponse:
+        """Handle generic resource not found errors (HTTP 404)."""
+        logger.warning(f"Resource not found: {request.url.path}")
+        return JSONResponse(
+            status_code=404,
+            content=create_error_response(
+                code="NOT_FOUND",
+                message="Resource not found",
             ),
         )
 

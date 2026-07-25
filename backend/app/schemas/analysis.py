@@ -5,8 +5,13 @@ from app.ai.models import RiskAssessment, SpecialistRecommendation, HealthReport
 
 
 class AnalysisRequest(BaseModel):
+    """Request to create a health analysis.
+
+    User identity is derived from authentication context, never from client input.
+    Ownership is always enforced - analysis is created for authenticated user.
+    """
+
     symptoms: str
-    user_id: Optional[str] = None
 
 
 class AnalysisResponse(BaseModel):
