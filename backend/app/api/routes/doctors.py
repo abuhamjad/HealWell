@@ -1,7 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from app.schemas.response import ApiResponse, success_response
 from app.core.constants import SUCCESS_DOCTORS_FOUND, DEFAULT_DOCTOR_RADIUS
 from app.services.doctor_service import DoctorService
+from app.database import get_db
+from app.models.user import User
+from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
 doctor_service = DoctorService()
@@ -12,10 +16,14 @@ async def get_nearby_doctors(
     latitude: float = None,
     longitude: float = None,
     specialty: str = None,
-    radius_km: float = DEFAULT_DOCTOR_RADIUS
+    radius_km: float = DEFAULT_DOCTOR_RADIUS,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Find nearby healthcare providers.
+
+    Protected endpoint - requires JWT authentication.
 
     Delegates to DoctorService.
     """
