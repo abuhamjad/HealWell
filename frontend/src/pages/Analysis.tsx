@@ -100,7 +100,7 @@ export function Analysis() {
               icon: '⚠️',
               status: 'complete',
               output: analysisData?.risk_assessment?.reasoning ?? 'Risk assessment completed',
-              time: '1.5s',
+              time: 'Completed',
             },
             {
               agent: 'Specialist Recommendation',
@@ -111,16 +111,18 @@ export function Analysis() {
                   ? `${analysisData.specialist_recommendation.reasoning}\n\nUrgency: ${analysisData.specialist_recommendation.urgency}`
                   : analysisData.specialist_recommendation.reasoning
                 : 'Specialist recommendation completed',
-              time: '1.5s',
+              time: 'Completed',
             },
             {
               agent: 'Health Report',
               icon: '📋',
               status: 'complete',
               output: analysisData?.health_report?.summary ?? 'Health report generated',
-              time: '1.5s',
+              time: 'Completed',
             },
           ],
+          warningSigns: analysisData?.risk_assessment?.warning_signs ?? [],
+          references: analysisData?.health_report?.references ?? [],
         })
       }
 
@@ -381,6 +383,42 @@ export function Analysis() {
                 </motion.div>
               ))}
             </div>
+
+            {result.warningSigns?.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
+                className="glass rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertTriangle size={14} style={{ color: '#EF4444' }} />
+                  <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Warning Signs</span>
+                </div>
+                <ul className="space-y-2">
+                  {result.warningSigns.map((sign, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#EF4444', opacity: 0.65 }} />
+                      {sign}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            {result.references?.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
+                className="glass rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText size={14} style={{ color: '#8B5CF6' }} />
+                  <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Medical References</span>
+                </div>
+                <ul className="space-y-2">
+                  {result.references.map((ref, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#8B5CF6', opacity: 0.65 }} />
+                      {ref}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </div>
