@@ -1,4 +1,4 @@
-export type Page = 'home' | 'analysis' | 'history'
+export type Page = 'home' | 'analysis' | 'history' | 'profile'
 export type RiskLevel = 'low' | 'moderate' | 'high'
 export type AnalysisPhase = 'idle' | 'processing' | 'complete'
 

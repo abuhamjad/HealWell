@@ -32,11 +32,6 @@ export function Analysis() {
   const [symptoms, setSymptoms] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [expandedAgent, setExpandedAgent] = useState<number | null>(null)
-  const [formData, setFormData] = useState({
-    name: '', age: '', gender: 'male', height: '', weight: '',
-    diseases: '', medications: '', allergies: '',
-    smoking: 'no', alcohol: 'no', exercise: 'moderate', stress: 'moderate',
-  })
 
   const recRef = useRef<any>(null)
 
@@ -154,64 +149,7 @@ export function Analysis() {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-[360px_1fr] gap-6">
-              <div className="space-y-4">
-                <div className="glass rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <User size={15} className="text-blue-400" />
-                    <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Patient Information</span>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { key: 'name', label: 'Full Name', placeholder: 'John Doe', type: 'text' },
-                      { key: 'age', label: 'Age', placeholder: '28', type: 'number' },
-                      { key: 'height', label: 'Height (cm)', placeholder: '175', type: 'number' },
-                      { key: 'weight', label: 'Weight (kg)', placeholder: '72', type: 'number' },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.label}</label>
-                        <input type={f.type} placeholder={f.placeholder}
-                          value={(formData as any)[f.key]}
-                          onChange={e => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
-                          className="w-full glass rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 outline-none border border-white/08 focus:border-blue-400/40 bg-transparent transition-smooth" />
-                      </div>
-                    ))}
-                    <div>
-                      <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>Gender</label>
-                      <select value={formData.gender} onChange={e => setFormData(d => ({ ...d, gender: e.target.value }))}
-                        className="w-full glass rounded-xl px-3 py-2 text-sm text-white bg-[#0B0B0B] outline-none border border-white/08 focus:border-blue-400/40 transition-smooth">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText size={15} className="text-purple-400" />
-                    <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Medical History</span>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { key: 'diseases', label: 'Existing Conditions', placeholder: 'Diabetes, Hypertension...' },
-                      { key: 'medications', label: 'Current Medications', placeholder: 'Metformin 500mg...' },
-                      { key: 'allergies', label: 'Known Allergies', placeholder: 'Penicillin, Latex...' },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.label}</label>
-                        <input type="text" placeholder={f.placeholder}
-                          value={(formData as any)[f.key]}
-                          onChange={e => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
-                          className="w-full glass rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 outline-none border border-white/08 focus:border-purple-400/40 bg-transparent transition-smooth" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col">
+            <div className="flex flex-col">
                 <div className="glass rounded-2xl p-6 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -260,7 +198,6 @@ export function Analysis() {
                   </div>
                 )}
               </div>
-            </div>
           </motion.div>
         )}
 

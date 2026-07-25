@@ -5,6 +5,7 @@ import { NavBar } from './components/Navbar'
 import { Home } from './pages/Home'
 import { Analysis } from './pages/Analysis'
 import { History } from './pages/History'
+import { Profile } from './pages/Profile'
 import { Footer } from './sections/Footer'
 import { BackgroundOrbs } from './utils/BackgroundOrbs'
 
@@ -34,6 +35,11 @@ export default function App() {
           {page === 'history' && (
             <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
               <History />
+            </motion.div>
+          )}
+          {page === 'profile' && (
+            <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+              <Profile />
             </motion.div>
           )}
         </AnimatePresence>

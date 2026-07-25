@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Activity, Menu, X, History, Sparkles } from 'lucide-react'
+import { Activity, Menu, X, History, Sparkles, LogIn } from 'lucide-react'
 import { Page } from '../types'
 
 export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
@@ -48,6 +48,10 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
             className="btn-primary flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-xl font-semibold">
             <Sparkles size={14} /> Start Analysis
           </button>
+          <button onClick={() => setPage('profile')}
+            className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-xl btn-ghost hover:bg-white/05">
+            <LogIn size={14} /> Login
+          </button>
           <button className="md:hidden btn-ghost p-2 rounded-xl" onClick={() => setMenuOpen(o => !o)}>
             {menuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -65,6 +69,10 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
             <button onClick={() => { setPage('history'); setMenuOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">
               History
+            </button>
+            <button onClick={() => { setPage('profile'); setMenuOpen(false) }}
+              className="w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">
+              Login
             </button>
           </motion.div>
         )}
