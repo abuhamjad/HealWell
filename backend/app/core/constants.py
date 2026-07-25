@@ -37,3 +37,9 @@ SPECIALTIES = [
     "Internal Medicine",
     "Emergency Medicine",
 ]
+
+# ========== AUTHENTICATION (v0.9.5+) ==========
+# TODO: Replace with current_user.id from JWT token once authentication is implemented
+# This placeholder UUID is used for all unauthenticated API requests
+# Once JWT middleware is added, simply replace this constant with the authenticated user's ID
+PLACEHOLDER_USER_ID = "00000000-0000-0000-0000-000000000000"
