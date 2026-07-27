@@ -1,81 +1,94 @@
-# Deployment Checklist
+# Deployment Checklist - v1.0.0
 
-Step-by-step verification checklist for deploying HealWell across all environments.
+Step-by-step verification checklist for deploying HealWell v1.0.0 across all environments.
 
 ---
 
 ## Local Development Setup
 
 ### Prerequisites
-- [ ] Node.js 24+ installed (`node --version`)
+
+- [ ] Node.js 20+ installed (`node --version`)
 - [ ] npm installed (`npm --version`)
-- [ ] Python 3.10+ installed (`python --version`)
+- [ ] Python 3.11+ installed (`python --version`)
 - [ ] Git installed and configured
 - [ ] Project cloned locally
+- [ ] OpenAI API key obtained (https://platform.openai.com/api-keys)
 
 ### Backend Setup
 
 - [ ] Navigate to `backend/` directory
 - [ ] Create virtual environment: `python -m venv .venv`
-- [ ] Activate venv: `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Linux)
+- [ ] Activate venv:
+  - Windows: `.venv\Scripts\activate`
+  - Linux/macOS: `source .venv/bin/activate`
 - [ ] Install dependencies: `pip install -r requirements.txt`
 - [ ] Copy `.env.example` to `.env`: `cp .env.example .env`
-- [ ] Verify `.env` contains:
-  - `ENVIRONMENT=development`
-  - `DEBUG=True`
-  - `FRONTEND_URL=http://localhost:5173`
-  - `CORS_ORIGINS=...includes localhost...`
+- [ ] Configure `.env`:
+  - [ ] `ENVIRONMENT=development`
+  - [ ] `DEBUG=True`
+  - [ ] `FRONTEND_URL=http://localhost:5173`
+  - [ ] `CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173`
+  - [ ] `LLM_API_KEY=sk-...your-openai-key...` (optional for testing)
+  - [ ] `LLM_MODEL=gpt-4`
 
 ### Frontend Setup
 
 - [ ] Navigate to `frontend/` directory
 - [ ] Install dependencies: `npm install`
-- [ ] Verify `.env.example` exists with VITE_API_BASE_URL
-- [ ] Optional: Create `.env` with:
-  - `VITE_API_BASE_URL=http://127.0.0.1:8000`
-  - `VITE_ENVIRONMENT=development`
-  - `VITE_DEBUG=true`
+- [ ] Create `.env.local`:
+  ```
+  VITE_API_BASE_URL=http://localhost:8000
+  VITE_ENVIRONMENT=development
+  ```
 
 ### Local Verification
 
+**Backend:**
 - [ ] Start backend: `uvicorn app.main:app --reload`
   - [ ] Backend starts successfully
   - [ ] No errors in console
   - [ ] Swagger UI accessible: http://localhost:8000/docs
+  - [ ] ReDoc accessible: http://localhost:8000/redoc
 
+**Frontend:**
 - [ ] Start frontend: `npm run dev`
   - [ ] Frontend compiles successfully
   - [ ] Dev server running on port 5173
-  - [ ] No build errors
+  - [ ] No TypeScript errors
+  - [ ] No build warnings
 
+**API Testing:**
 - [ ] Open http://localhost:5173 in browser
   - [ ] Homepage loads
   - [ ] No console errors
-  - [ ] Navbar renders correctly
-  - [ ] Analyze page is accessible
+  - [ ] Navbar renders
+  - [ ] Analysis page accessible
 
-- [ ] Test analysis workflow
-  - [ ] Enter symptoms and submit
-  - [ ] LangGraph executes without errors
-  - [ ] Analysis results display
+**Workflow Testing:**
+- [ ] Test analysis submission
+  - [ ] Enter symptoms: "I have a headache and fever"
+  - [ ] Click Analyze
+  - [ ] Results display within 10 seconds
   - [ ] Risk badge shows
   - [ ] Specialist recommendation displays
   - [ ] Health report shows
+  - [ ] No error messages
 
-- [ ] Check backend logs
-  - [ ] POST /api/v1/analysis returns 200
-  - [ ] LangGraph agents execute (symptom → risk → specialist → report)
-  - [ ] Mock data returned correctly
+**Health Endpoints:**
+- [ ] `curl http://localhost:8000/` - Returns version info
+- [ ] `curl http://localhost:8000/health` - Returns healthy status
+- [ ] `curl -X POST http://localhost:8000/api/v1/analysis -H "Content-Type: application/json" -d '{"symptoms": "test"}'` - Returns analysis
 
-- [ ] Test CORS
-  ```bash
-  curl -X OPTIONS http://localhost:8000/api/v1/analysis \
-    -H "Origin: http://localhost:5173" \
-    -H "Access-Control-Request-Method: POST" \
-    -v
-  ```
-  - [ ] Response includes `access-control-allow-origin`
-  - [ ] Status 200
+**CORS Verification:**
+```bash
+curl -X OPTIONS http://localhost:8000/api/v1/analysis \
+  -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: POST" \
+  -v
+```
+- [ ] Response includes `access-control-allow-origin: http://localhost:5173`
+- [ ] Status 200
 
 ---
 
@@ -83,34 +96,40 @@ Step-by-step verification checklist for deploying HealWell across all environmen
 
 ### Setup
 
-- [ ] Note your machine's LAN IP: `ipconfig` (Windows) or `ifconfig` (Linux)
+- [ ] Find LAN IP:
+  - Windows: `ipconfig` (look for "IPv4 Address")
+  - Linux/macOS: `ifconfig` (look for "inet addr")
+  
 - [ ] Update `backend/.env`:
-  - `CORS_ORIGINS=...add your-lan-ip:5173...`
-  - `FRONTEND_URL=http://your-lan-ip:5173`
+  ```
+  FRONTEND_URL=http://192.168.1.X:5173
+  CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.X:5173
+  ```
 
-- [ ] Restart backend with: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+- [ ] Restart backend: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 
 ### LAN Device Access
 
 - [ ] Access frontend from LAN device: `http://192.168.1.X:5173`
-- [ ] Homepage loads on LAN device
+  - [ ] Homepage loads
+  - [ ] No CORS errors in console
+  - [ ] Analyze page accessible
+
 - [ ] Test analysis workflow on LAN device
   - [ ] Submit symptoms
-  - [ ] Results display
-  - [ ] No CORS errors
+  - [ ] Results display correctly
+  - [ ] No errors in browser console
 
-- [ ] Test from different LAN device if possible
+### CORS Testing on LAN
 
-### CORS Verification
-
-- [ ] From LAN device, test CORS:
-  ```bash
-  curl -X OPTIONS http://192.168.1.X:8000/api/v1/analysis \
-    -H "Origin: http://192.168.1.X:5173" \
-    -v
-  ```
-  - [ ] Includes `access-control-allow-origin` header
-  - [ ] Status 200
+```bash
+curl -X OPTIONS http://192.168.1.X:8000/api/v1/analysis \
+  -H "Origin: http://192.168.1.X:5173" \
+  -H "Access-Control-Request-Method: POST" \
+  -v
+```
+- [ ] Includes `access-control-allow-origin` header
+- [ ] Status 200
 
 ---
 
@@ -122,18 +141,26 @@ Step-by-step verification checklist for deploying HealWell across all environmen
 - [ ] Create new Web Service
 - [ ] Connect GitHub repository
 - [ ] Configure:
-  - [ ] Environment: Python 3.10
+  - [ ] Environment: Python 3.11
   - [ ] Build Command: `pip install -r requirements.txt`
   - [ ] Start Command: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
-  - [ ] Root Directory: `./backend` (if monorepo)
+  - [ ] Root Directory: `./backend`
 
 - [ ] Add Environment Variables:
-  - `ENVIRONMENT=staging`
-  - `DEBUG=True`
-  - `FRONTEND_STAGING_URL=https://healwell-pr-xxx.vercel.app` (update with actual URL)
-  - `CORS_ORIGINS=https://healwell-pr-xxx.vercel.app`
-  - `API_PREFIX=/api/v1`
-  - `LOG_LEVEL=INFO`
+  ```
+  ENVIRONMENT=staging
+  DEBUG=True
+  FRONTEND_STAGING_URL=https://healwell-staging.vercel.app
+  CORS_ORIGINS=https://healwell-staging.vercel.app,http://localhost:5173
+  
+  LLM_BASE_URL=https://api.openai.com/v1
+  LLM_API_KEY=sk-...your-staging-openai-key...
+  LLM_MODEL=gpt-4
+  LLM_TIMEOUT=30
+  
+  LOG_LEVEL=INFO
+  LOG_FORMAT=json
+  ```
 
 - [ ] Deploy service
 - [ ] Wait for deployment to complete
@@ -141,233 +168,184 @@ Step-by-step verification checklist for deploying HealWell across all environmen
 
 ### Create Vercel Preview Deployment
 
-- [ ] Push changes to GitHub branch (creates PR)
+- [ ] Push changes to GitHub non-main branch
 - [ ] Vercel automatically creates preview deployment
-- [ ] Note preview URL: `https://healwell-pr-xxx.vercel.app`
+- [ ] Note preview URL: `https://healwell-staging.vercel.app`
 
 ### Connect Render and Vercel
 
-- [ ] Update Render environment variables with correct Vercel preview URL
+- [ ] Update Render `FRONTEND_STAGING_URL` with actual Vercel preview URL
+- [ ] Update Render `CORS_ORIGINS` with Vercel preview URL
 - [ ] Restart Render backend service
 
 ### Staging Verification
 
-- [ ] Test health endpoint:
-  ```bash
-  curl https://healwell-staging.onrender.com/health
-  ```
-  - [ ] Returns 200
-  - [ ] Includes environment info
+**Health Check:**
+```bash
+curl https://healwell-staging.onrender.com/health
+```
+- [ ] Returns 200
+- [ ] Includes environment info
 
-- [ ] Test CORS preflight:
-  ```bash
-  curl -X OPTIONS https://healwell-staging.onrender.com/api/v1/analysis \
-    -H "Origin: https://healwell-pr-xxx.vercel.app" \
-    -H "Access-Control-Request-Method: POST" \
-    -v
-  ```
-  - [ ] Includes CORS headers
-  - [ ] Status 200
+**CORS Preflight:**
+```bash
+curl -X OPTIONS https://healwell-staging.onrender.com/api/v1/analysis \
+  -H "Origin: https://healwell-staging.vercel.app" \
+  -H "Access-Control-Request-Method: POST" \
+  -v
+```
+- [ ] Includes CORS headers
+- [ ] Status 200
 
-- [ ] Test analysis endpoint:
-  ```bash
-  curl -X POST https://healwell-staging.onrender.com/api/v1/analysis \
-    -H "Content-Type: application/json" \
-    -H "Origin: https://healwell-pr-xxx.vercel.app" \
-    -d '{"symptoms": "test"}'
-  ```
-  - [ ] Returns 200
-  - [ ] Returns valid analysis
+**Analysis Endpoint:**
+```bash
+curl -X POST https://healwell-staging.onrender.com/api/v1/analysis \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://healwell-staging.vercel.app" \
+  -d '{"symptoms": "I have a headache"}'
+```
+- [ ] Returns 200
+- [ ] Returns valid analysis with risk_level, specialist, etc.
 
-- [ ] Access frontend from Vercel URL: `https://healwell-pr-xxx.vercel.app`
+**Frontend Access:**
+- [ ] Open Vercel staging URL: `https://healwell-staging.vercel.app`
   - [ ] Homepage loads
   - [ ] No console CORS errors
   - [ ] Analyze page works
   - [ ] Analysis workflow completes
+  - [ ] Results display
 
 ---
 
 ## Production Deployment (Render + Vercel)
 
-### Production Database (Render)
-
-- [ ] Create PostgreSQL database on Render
-- [ ] Configure:
-  - [ ] Region: Same as backend
-  - [ ] PostgreSQL version: 14+
-  - [ ] Enable backups
-- [ ] Note connection string: `postgresql://...`
-- [ ] Create strong password (32+ characters)
-
 ### Create Production Backend Service
 
 - [ ] Create new Render Web Service
-- [ ] Connect GitHub repository (main branch)
+- [ ] Connect GitHub repository (main branch only)
 - [ ] Configure:
-  - [ ] Environment: Python 3.10
+  - [ ] Environment: Python 3.11
   - [ ] Build Command: `pip install -r requirements.txt`
   - [ ] Start Command: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
+  - [ ] Region: Select closest to users
 
 - [ ] Add Environment Variables:
-  - [ ] `ENVIRONMENT=production`
-  - [ ] `DEBUG=False`
-  - [ ] `FRONTEND_PRODUCTION_URL=https://healwell.vercel.app`
-  - [ ] `CORS_ORIGINS=https://healwell.vercel.app`
-  - [ ] `DATABASE_URL=postgresql://...` (if v0.9+)
-  - [ ] `GEMINI_API_KEY=sk-...` (if v0.7+)
-  - [ ] `LOG_LEVEL=WARNING`
-  - [ ] `AI_TEMPERATURE=0.3` (more consistent)
+  ```
+  ENVIRONMENT=production
+  DEBUG=False
+  FRONTEND_PRODUCTION_URL=https://healwell.vercel.app
+  CORS_ORIGINS=https://healwell.vercel.app
+  
+  LLM_BASE_URL=https://api.openai.com/v1
+  LLM_API_KEY=sk-...your-production-openai-key...
+  LLM_MODEL=gpt-4
+  LLM_TIMEOUT=30
+  
+  LOG_LEVEL=WARNING
+  LOG_FORMAT=json
+  ```
 
 - [ ] Deploy backend
-- [ ] Wait for deployment
+- [ ] Wait for deployment complete
 - [ ] Note Production URL: `https://healwell-api.onrender.com`
 
-### Production Frontend (Vercel)
+### Deploy Frontend to Vercel Production
 
-- [ ] Deploy main branch to Vercel production
+- [ ] Push to main branch or deploy from Vercel dashboard
 - [ ] Configure environment variables:
-  - [ ] `VITE_API_BASE_URL=https://healwell-api.onrender.com`
-  - [ ] `VITE_ENVIRONMENT=production`
-  - [ ] `VITE_DEBUG=false`
+  ```
+  VITE_API_BASE_URL=https://healwell-api.onrender.com
+  VITE_ENVIRONMENT=production
+  VITE_DEBUG=false
+  ```
 
-- [ ] Set up custom domain (if applicable)
+- [ ] Set up custom domain (optional)
 - [ ] Enable auto-SSL
-- [ ] Wait for production deployment
-
-### Update Backend CORS
-
-- [ ] Confirm Render backend is running at: `https://healwell-api.onrender.com`
-- [ ] Update Render environment variable:
-  - `CORS_ORIGINS=https://healwell.vercel.app`
-  - Restart backend service
+- [ ] Wait for production deployment complete
 
 ### Production Verification
 
-- [ ] Test health endpoint:
-  ```bash
-  curl https://healwell-api.onrender.com/health
-  ```
-  - [ ] Returns 200
-  - [ ] No debug info leaked
+**Backend Health:**
+```bash
+curl https://healwell-api.onrender.com/health
+```
+- [ ] Returns 200
+- [ ] Status is "healthy"
+- [ ] No debug info leaked
 
-- [ ] Test CORS:
-  ```bash
-  curl -X OPTIONS https://healwell-api.onrender.com/api/v1/analysis \
-    -H "Origin: https://healwell.vercel.app" \
-    -v
-  ```
-  - [ ] Includes `access-control-allow-origin: https://healwell.vercel.app`
-  - [ ] No wildcards in production
+**CORS Verification:**
+```bash
+curl -X OPTIONS https://healwell-api.onrender.com/api/v1/analysis \
+  -H "Origin: https://healwell.vercel.app" \
+  -H "Access-Control-Request-Method: POST" \
+  -v
+```
+- [ ] Includes `access-control-allow-origin: https://healwell.vercel.app`
+- [ ] No wildcards
+- [ ] Status 200
 
-- [ ] Test from production frontend: `https://healwell.vercel.app`
+**API Test:**
+```bash
+curl -X POST https://healwell-api.onrender.com/api/v1/analysis \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://healwell.vercel.app" \
+  -d '{"symptoms": "I have chest pain and shortness of breath"}'
+```
+- [ ] Returns 200
+- [ ] Includes complete analysis
+- [ ] Emergency detection works if applicable
+- [ ] Response time < 30 seconds
+
+**Frontend Access:**
+- [ ] Open production URL: `https://healwell.vercel.app`
   - [ ] Homepage loads
   - [ ] No console errors
-  - [ ] Analyze workflow works
-  - [ ] Results display
+  - [ ] Analyze page works
+  - [ ] Analysis workflow executes
+  - [ ] Results display correctly
 
-- [ ] Verify production-only settings:
-  - [ ] DEBUG=False in backend
-  - [ ] ENVIRONMENT=production
-  - [ ] VITE_DEBUG=false in frontend
-  - [ ] CORS does NOT include localhost
-  - [ ] API keys stored in Render secrets (not .env)
-
-- [ ] Test from different networks/browsers
-- [ ] Monitor Render logs for errors
-- [ ] Set up alerts/monitoring (optional)
-
----
-
-## v0.7 Gemini Integration
-
-### Prerequisites
-- [ ] Google Gemini API key obtained from https://aistudio.google.com/apikey
-- [ ] API key is valid and has quota
-
-### Configuration
-
-- [ ] Render production environment variable:
-  - [ ] `GEMINI_API_KEY=sk-...your-key...`
-- [ ] Restart backend service
-- [ ] Verify backend starts without errors
-
-### Testing
-
-- [ ] Submit analysis from production frontend
-- [ ] Verify response comes from Gemini (not mock data)
-- [ ] Check response quality
-- [ ] Monitor Gemini API usage/costs
-- [ ] Set API usage alerts if needed
-
----
-
-## v0.9 Database Integration
-
-### Prerequisites
-- [ ] PostgreSQL database created on Render
-- [ ] Strong credentials set
-- [ ] Database accessible from Render backend
-
-### Configuration
-
-- [ ] Set `DATABASE_URL` in production
-- [ ] Restart backend
-- [ ] Verify connection successful
-
-### Database Setup
-
-- [ ] Run migrations (when available): `alembic upgrade head`
-- [ ] Verify database schema created
-- [ ] Test data persistence
-
-### Testing
-
-- [ ] Create analysis (saves to database)
-- [ ] Retrieve analysis history
-- [ ] Verify data persisted correctly
-- [ ] Test database backups
+**Production Settings Verification:**
+- [ ] Backend: `DEBUG=False`
+- [ ] Backend: `ENVIRONMENT=production`
+- [ ] Frontend: `VITE_DEBUG=false`
+- [ ] CORS does NOT include localhost
+- [ ] API keys in Render secrets (not .env)
+- [ ] No test data in production
 
 ---
 
 ## Post-Deployment Tasks
 
-### Monitoring
+### Monitoring Setup
 
-- [ ] Set up error tracking (e.g., Sentry)
-- [ ] Configure Render logs retention
+- [ ] Render error tracking enabled
+- [ ] Render logs configured with retention
 - [ ] Set up alerts for:
-  - [ ] High error rates
-  - [ ] API timeouts
-  - [ ] Database connection issues
+  - [ ] API errors (5xx responses)
+  - [ ] High response times (> 10s)
+  - [ ] Service restarts
 
 ### Documentation
 
-- [ ] Update deployment documentation with actual URLs
+- [ ] Update deployment doc with actual URLs
 - [ ] Document any custom configurations
-- [ ] Create runbook for common issues
+- [ ] Create incident response runbook
 - [ ] Document rollback procedures
 
-### Backup & Recovery
+### Performance Monitoring
 
-- [ ] Verify database backups enabled
-- [ ] Test backup restoration
-- [ ] Document recovery procedures
-- [ ] Set backup retention policies
+- [ ] Monitor response times at: Render dashboard
+- [ ] Check API latency trends
+- [ ] Monitor OpenAI API usage/costs
+- [ ] Optimize if response times > 5s
 
-### Security
+### Security Verification
 
-- [ ] Enable HTTPS (automatic on Render/Vercel)
-- [ ] Review security headers
-- [ ] Verify no secrets in logs
-- [ ] Set up CORS properly (no wildcards in prod)
-- [ ] Enable rate limiting (future)
-
-### Performance
-
-- [ ] Monitor response times
-- [ ] Check backend CPU/memory usage
-- [ ] Monitor API latency
-- [ ] Optimize slow endpoints
+- [ ] HTTPS enforced on all URLs
+- [ ] CORS properly restricted to production domains
+- [ ] No API keys in logs
+- [ ] No sensitive data exposed
+- [ ] Security headers present
 
 ---
 
@@ -375,48 +353,86 @@ Step-by-step verification checklist for deploying HealWell across all environmen
 
 ### If Backend Breaks
 
-1. Check Render logs for errors
-2. Review latest environment variable changes
-3. Revert problematic environment variable
+1. Check Render logs: `Render Dashboard → Logs`
+2. Review recent environment variable changes
+3. Revert problematic configuration
 4. Restart backend service
-5. Verify health endpoint works
+5. Verify health endpoint: `curl https://healwell-api.onrender.com/health`
+6. Test analysis endpoint
 
 ### If Frontend Breaks
 
 1. Check Vercel deployment logs
-2. Revert to previous commit if needed
-3. Verify environment variables are set correctly
+2. Verify environment variables are correct
+3. Rollback to previous working commit if needed
 4. Redeploy
+5. Verify homepage loads
 
-### If Database Issues
+### If LLM API Fails
 
-1. Check database connection string
-2. Verify database is running
-3. Check database logs for issues
-4. Restore from backup if necessary
+1. Verify `LLM_API_KEY` is valid
+2. Check OpenAI account status and quota
+3. Monitor OpenAI service status
+4. Verify API calls are succeeding in logs
+5. Switch to alternative provider if needed
 
 ---
 
 ## Success Criteria
 
-- [ ] Both frontend and backend deployed
+- [ ] Frontend and backend deployed and running
 - [ ] All environment variables correctly configured
+- [ ] Health endpoints return 200
 - [ ] CORS working for production domains only
-- [ ] API responses working
-- [ ] LangGraph workflow executing
-- [ ] Mock AI data returned (v0.6)
-- [ ] No console errors in production
+- [ ] Analysis workflow executes end-to-end
+- [ ] Results display correctly on frontend
+- [ ] No errors in production browser console
 - [ ] No sensitive data in logs
-- [ ] Monitoring/alerts configured
-- [ ] Backup strategy in place
+- [ ] Response times consistently < 10s
+- [ ] OpenAI API calls successful
+- [ ] Monitoring and alerts configured
+
+---
+
+## Testing Scenarios
+
+### Happy Path
+
+1. User navigates to app
+2. Clicks "Get Analysis"
+3. Enters symptoms: "I have a mild headache and sore throat"
+4. Clicks Submit
+5. Receives analysis with low risk, cold/flu recommendation
+6. Reads health report and recommendations
+
+### Emergency Scenario
+
+1. User enters: "severe chest pain and difficulty breathing"
+2. Analysis marks as emergency
+3. Emergency message displays: "🚨 EMERGENCY: Call 911..."
+4. User can copy message or call emergency services
+
+### Error Handling
+
+1. Submit empty symptoms → Validation error
+2. Backend timeout → User sees error message
+3. CORS failure → Console error, no results
+4. Invalid API response → Handled gracefully
 
 ---
 
 ## Support & Troubleshooting
 
-See `DEPLOYMENT.md` for common issues and solutions:
-- CORS errors
-- Backend won't start
+See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md) for:
+- CORS errors and solutions
+- Backend startup issues
 - API connection failures
-- LAN connectivity issues
-- Database problems
+- LLM API errors
+- Performance optimization
+- Common debugging techniques
+
+---
+
+**HealWell v1.0.0 Deployment Checklist**
+
+Last Updated: July 27, 2026

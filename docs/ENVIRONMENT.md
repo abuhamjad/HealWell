@@ -1,17 +1,13 @@
-# Environment Variables Reference
+# Environment Variables Reference - v1.0.0
 
-Complete reference for all HealWell configuration variables across all environments.
-
----
+Complete reference for all HealWell environment configuration across development, staging, and production.
 
 ## Overview
 
 Environment variables control HealWell's behavior across:
-- **Development**: Local development with full debugging
-- **Staging**: Pre-production testing with production-like settings
-- **Production**: Live deployment with strict security
-
----
+- **Development:** Local development with full debugging and permissive CORS
+- **Staging:** Pre-production testing with production-like settings
+- **Production:** Live deployment with strict security
 
 ## Core Configuration
 
@@ -47,16 +43,26 @@ DEBUG=True    # Development/Staging: Full error details
 DEBUG=False   # Production: Hide implementation details
 ```
 
-### API_TITLE & API_VERSION
+### API_TITLE
 
 **Type:** `string`  
-**Default:** `HealWell API` | `0.6.0`
+**Default:** `HealWell API`
 
-API metadata displayed in Swagger UI and health endpoints.
+API title displayed in Swagger documentation.
 
 ```env
 API_TITLE=HealWell API
-API_VERSION=0.6.0
+```
+
+### API_VERSION
+
+**Type:** `string`  
+**Default:** `1.0.0`
+
+API version. Must match production release version.
+
+```env
+API_VERSION=1.0.0
 ```
 
 ---
@@ -71,8 +77,8 @@ API_VERSION=0.6.0
 Server bind address.
 
 ```env
-HOST=0.0.0.0      # Listen on all interfaces (development, Render)
-HOST=127.0.0.1    # Listen on localhost only (not recommended)
+HOST=0.0.0.0      # Listen on all interfaces (production)
+HOST=127.0.0.1    # Listen on localhost only (development)
 ```
 
 ### PORT
@@ -83,8 +89,7 @@ HOST=127.0.0.1    # Listen on localhost only (not recommended)
 Server port.
 
 ```env
-PORT=8000         # Development
-PORT=8000         # Render (automatically assigned)
+PORT=8000         # Development and production
 ```
 
 ---
@@ -96,7 +101,7 @@ PORT=8000         # Render (automatically assigned)
 **Type:** `string`  
 **Default:** `http://localhost:5173`
 
-Frontend URL used in CORS for development environment. Used when `ENVIRONMENT=development`.
+Frontend URL for development environment. Used when `ENVIRONMENT=development`.
 
 ```env
 # Local development
@@ -111,11 +116,11 @@ FRONTEND_URL=http://192.168.1.10:5173
 **Type:** `string`  
 **Default:** `http://localhost:5173`
 
-Frontend URL used in CORS for staging environment. Used when `ENVIRONMENT=staging`.
+Frontend URL for staging environment. Used when `ENVIRONMENT=staging`.
 
 ```env
 # Vercel preview deployment
-FRONTEND_STAGING_URL=https://healwell-pr-123.vercel.app
+FRONTEND_STAGING_URL=https://healwell-staging.vercel.app
 ```
 
 ### FRONTEND_PRODUCTION_URL
@@ -123,14 +128,14 @@ FRONTEND_STAGING_URL=https://healwell-pr-123.vercel.app
 **Type:** `string`  
 **Default:** `https://healwell.vercel.app`
 
-Frontend URL used in CORS for production environment. Used when `ENVIRONMENT=production`.
+Frontend URL for production environment. Used when `ENVIRONMENT=production`.
 
 ```env
-# Production Vercel deployment
+# Vercel production deployment
 FRONTEND_PRODUCTION_URL=https://healwell.vercel.app
 
-# Custom domain (future)
-FRONTEND_PRODUCTION_URL=https://app.healwell.health
+# Custom domain (example)
+FRONTEND_PRODUCTION_URL=https://app.healwell.com
 ```
 
 ---
@@ -149,7 +154,7 @@ Allowed origins for CORS requests.
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.10:5173
 
 # Staging
-CORS_ORIGINS=https://healwell-pr-123.vercel.app
+CORS_ORIGINS=https://healwell-staging.vercel.app
 
 # Production (strict)
 CORS_ORIGINS=https://healwell.vercel.app
@@ -163,7 +168,7 @@ CORS_ORIGINS=https://healwell.vercel.app
 Allow credentials (cookies, authorization headers) in CORS requests.
 
 ```env
-CORS_ALLOW_CREDENTIALS=True   # Always True for APIs
+CORS_ALLOW_CREDENTIALS=True
 ```
 
 ### CORS_ALLOW_METHODS
@@ -187,7 +192,7 @@ HTTP headers allowed by CORS.
 
 ```env
 CORS_ALLOW_HEADERS=*          # All headers
-CORS_ALLOW_HEADERS=Content-Type,Authorization
+CORS_ALLOW_HEADERS=Content-Type
 ```
 
 ---
@@ -202,7 +207,8 @@ CORS_ALLOW_HEADERS=Content-Type,Authorization
 Base path for all API routes.
 
 ```env
-API_PREFIX=/api/v1            # Routes: POST /api/v1/analysis
+API_PREFIX=/api/v1
+# Routes: POST /api/v1/analysis
 ```
 
 ### API_HEALTH_CHECK_PATH
@@ -213,130 +219,89 @@ API_PREFIX=/api/v1            # Routes: POST /api/v1/analysis
 Health check endpoint path.
 
 ```env
-API_HEALTH_CHECK_PATH=/health  # GET /health
+API_HEALTH_CHECK_PATH=/health
 ```
 
 ---
 
-## AI/Gemini Configuration (v0.7+)
+## LLM Provider Configuration
 
-**Note:** These variables are required for v0.7 Gemini integration but are optional for v0.6.
+### LLM_BASE_URL
 
-### GEMINI_API_KEY
+**Type:** `string`  
+**Default:** `https://api.openai.com/v1`
+
+OpenAI-compatible API endpoint.
+
+Supports:
+- OpenAI: `https://api.openai.com/v1`
+- OpenRouter: `https://openrouter.ai/api/v1`
+- Azure OpenAI: `https://{resource-name}.openai.azure.com/v1`
+- Ollama (local): `http://localhost:11434/v1`
+
+```env
+# OpenAI (default)
+LLM_BASE_URL=https://api.openai.com/v1
+
+# OpenRouter
+LLM_BASE_URL=https://openrouter.ai/api/v1
+
+# Ollama local
+LLM_BASE_URL=http://localhost:11434/v1
+```
+
+### LLM_API_KEY
 
 **Type:** `string`  
 **Default:** `` (empty)
 
-Google Gemini API key. Get from: https://aistudio.google.com/apikey
+API key for the LLM provider. Required for production.
+
+Get keys from:
+- OpenAI: https://platform.openai.com/api-keys
+- OpenRouter: https://openrouter.ai/account/api-keys
 
 ```env
-# Leave empty for v0.6 (uses mock AI)
-GEMINI_API_KEY=
+# Development (can be empty for testing)
+LLM_API_KEY=
 
-# Set for v0.7 production
-GEMINI_API_KEY=sk-...your-key-here...
+# Production (required)
+LLM_API_KEY=sk-...your-key-here...
 ```
 
-### GEMINI_MODEL
+### LLM_MODEL
 
 **Type:** `string`  
-**Default:** `gemini-2.5-flash`
+**Default:** `gpt-4`
 
-Gemini model to use for AI analysis.
+Model name for the LLM provider.
+
+Common models:
+- `gpt-4` - Most capable (expensive)
+- `gpt-4-turbo` - Turbo version
+- `gpt-3.5-turbo` - Budget option
+- `claude-opus-4-1` - Via OpenRouter
 
 ```env
-GEMINI_MODEL=gemini-2.5-flash     # Fast, low-cost
-GEMINI_MODEL=gemini-2.0-pro       # More capable, higher-cost
+# Production
+LLM_MODEL=gpt-4
+
+# Budget
+LLM_MODEL=gpt-3.5-turbo
+
+# Via OpenRouter
+LLM_MODEL=meta-llama/llama-2-70b
 ```
 
-### AI_TIMEOUT
+### LLM_TIMEOUT
 
 **Type:** `integer` (seconds)  
 **Default:** `30`
 
-Maximum time to wait for AI response.
+Maximum time to wait for LLM response.
 
 ```env
-AI_TIMEOUT=30    # 30 seconds for analysis
-```
-
-### AI_MAX_RETRIES
-
-**Type:** `integer`  
-**Default:** `3`
-
-Number of retries for failed AI requests.
-
-```env
-AI_MAX_RETRIES=3   # Retry up to 3 times on failure
-```
-
-### AI_TEMPERATURE
-
-**Type:** `float` (0.0-1.0)  
-**Default:** `0.7`
-
-Controls randomness of AI responses.
-- `0.0` = Deterministic (same input → same output)
-- `1.0` = Creative (varied outputs)
-
-```env
-AI_TEMPERATURE=0.7   # Balanced (default)
-AI_TEMPERATURE=0.3   # More consistent medical advice
-AI_TEMPERATURE=0.9   # More varied responses
-```
-
----
-
-## Database Configuration (v0.9+)
-
-**Note:** These variables are required for v0.9 database integration but are optional for v0.6.
-
-### DATABASE_URL
-
-**Type:** `string`  
-**Default:** `` (empty)
-
-PostgreSQL connection string. Format:
-
-```
-postgresql://[user[:password]@][host][:port][/dbname][?param=value]
-```
-
-```env
-# Leave empty for v0.6 (no database)
-DATABASE_URL=
-
-# Local development
-DATABASE_URL=postgresql://healwell:password@localhost:5432/healwell
-
-# Render PostgreSQL
-DATABASE_URL=postgresql://user:password@dpg-xxx.regional.postgres.render.com:5432/healwell_db
-
-# With SSL (production)
-DATABASE_URL=postgresql://user:password@host:5432/db?sslmode=require
-```
-
-### DATABASE_POOL_SIZE
-
-**Type:** `integer`  
-**Default:** `5`
-
-Database connection pool size.
-
-```env
-DATABASE_POOL_SIZE=5      # 5 concurrent connections
-```
-
-### DATABASE_MAX_OVERFLOW
-
-**Type:** `integer`  
-**Default:** `10`
-
-Maximum overflow connections beyond pool size.
-
-```env
-DATABASE_MAX_OVERFLOW=10   # Allow 10 extra connections if needed
+LLM_TIMEOUT=30    # 30 seconds per analysis
 ```
 
 ---
@@ -372,66 +337,153 @@ LOG_FORMAT=text      # Human-readable logs (development)
 
 ---
 
+## Frontend Environment Variables
+
+### VITE_API_BASE_URL
+
+**Type:** `string`  
+**Frontend config file:** `frontend/src/config/env.ts`
+
+Backend API base URL.
+
+```env
+# Development
+VITE_API_BASE_URL=http://localhost:8000
+
+# Production
+VITE_API_BASE_URL=https://api.healwell.com
+```
+
+### VITE_ENVIRONMENT
+
+**Type:** `string`  
+**Values:** `development` | `staging` | `production`  
+**Frontend config file:** `frontend/src/config/env.ts`
+
+Frontend environment.
+
+```env
+VITE_ENVIRONMENT=development
+VITE_ENVIRONMENT=production
+```
+
+---
+
 ## Environment Presets
 
 ### Development Preset
 
 ```env
+# Backend
 ENVIRONMENT=development
 DEBUG=True
+API_TITLE=HealWell API
+API_VERSION=1.0.0
+HOST=0.0.0.0
+PORT=8000
+
+# Frontend URLs
 FRONTEND_URL=http://localhost:5173
-CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://192.168.1.10:5173
+FRONTEND_STAGING_URL=http://localhost:5173
+FRONTEND_PRODUCTION_URL=https://healwell.vercel.app
+
+# CORS
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+CORS_ALLOW_CREDENTIALS=True
+CORS_ALLOW_METHODS=*
+CORS_ALLOW_HEADERS=*
+
+# API
+API_PREFIX=/api/v1
+API_HEALTH_CHECK_PATH=/health
+
+# LLM (optional for development)
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=
+LLM_MODEL=gpt-4
+LLM_TIMEOUT=30
+
+# Logging
 LOG_LEVEL=DEBUG
 LOG_FORMAT=text
 
-# v0.7+ (optional)
-GEMINI_API_KEY=
-AI_TEMPERATURE=0.7
-
-# v0.9+ (optional)
-DATABASE_URL=
+# Frontend (.env.local)
+VITE_API_BASE_URL=http://localhost:8000
+VITE_ENVIRONMENT=development
 ```
 
 ### Staging Preset
 
 ```env
+# Backend
 ENVIRONMENT=staging
 DEBUG=True
-FRONTEND_STAGING_URL=https://healwell-pr-123.vercel.app
-CORS_ORIGINS=https://healwell-pr-123.vercel.app
+API_TITLE=HealWell API
+API_VERSION=1.0.0
+HOST=0.0.0.0
+PORT=8000
+
+# Frontend URLs
+FRONTEND_URL=https://healwell-staging.vercel.app
+FRONTEND_STAGING_URL=https://healwell-staging.vercel.app
+FRONTEND_PRODUCTION_URL=https://healwell.vercel.app
+
+# CORS
+CORS_ORIGINS=https://healwell-staging.vercel.app
+CORS_ALLOW_CREDENTIALS=True
+CORS_ALLOW_METHODS=*
+CORS_ALLOW_HEADERS=*
+
+# API
+API_PREFIX=/api/v1
+API_HEALTH_CHECK_PATH=/health
+
+# LLM
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=sk-...your-staging-key...
+LLM_MODEL=gpt-4
+LLM_TIMEOUT=30
+
+# Logging
 LOG_LEVEL=INFO
 LOG_FORMAT=json
-PORT=8000
-HOST=0.0.0.0
-
-# v0.7+
-GEMINI_API_KEY=sk-...your-staging-key...
-AI_TEMPERATURE=0.7
-
-# v0.9+
-DATABASE_URL=postgresql://user:pass@staging-db:5432/healwell
 ```
 
 ### Production Preset
 
 ```env
+# Backend
 ENVIRONMENT=production
 DEBUG=False
+API_TITLE=HealWell API
+API_VERSION=1.0.0
+HOST=0.0.0.0
+PORT=8000
+
+# Frontend URLs
+FRONTEND_URL=https://healwell.vercel.app
+FRONTEND_STAGING_URL=https://healwell-staging.vercel.app
 FRONTEND_PRODUCTION_URL=https://healwell.vercel.app
+
+# CORS
 CORS_ORIGINS=https://healwell.vercel.app
+CORS_ALLOW_CREDENTIALS=True
+CORS_ALLOW_METHODS=GET,POST,OPTIONS
+CORS_ALLOW_HEADERS=Content-Type
+
+# API
+API_PREFIX=/api/v1
+API_HEALTH_CHECK_PATH=/health
+
+# LLM (required)
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=sk-...your-production-key...
+LLM_MODEL=gpt-4
+LLM_TIMEOUT=30
+
+# Logging
 LOG_LEVEL=WARNING
 LOG_FORMAT=json
-PORT=8000
-HOST=0.0.0.0
-
-# v0.7+ (required)
-GEMINI_API_KEY=sk-...your-production-key...
-AI_TEMPERATURE=0.3  # More consistent for production
-
-# v0.9+ (required)
-DATABASE_URL=postgresql://user:secure_password@prod-db:5432/healwell_db?sslmode=require
-DATABASE_POOL_SIZE=20
-DATABASE_MAX_OVERFLOW=50
 ```
 
 ---
@@ -443,22 +495,20 @@ DATABASE_MAX_OVERFLOW=50
 - [ ] `ENVIRONMENT=production`
 - [ ] `DEBUG=False`
 - [ ] `CORS_ORIGINS` contains only frontend domain (no localhost)
-- [ ] `GEMINI_API_KEY` stored in Render/Vercel secrets (not in git)
-- [ ] `DATABASE_URL` uses strong password
-- [ ] `DATABASE_URL` uses SSL (`sslmode=require`)
+- [ ] `LLM_API_KEY` stored in Render/Vercel secrets (not in git)
 - [ ] No API keys or credentials in version control
-- [ ] Environment variables set via deployment platform (not .env file)
+- [ ] Environment variables set via deployment platform secrets
+- [ ] HTTPS used for all frontend/backend URLs
 
 ### Never Commit to Git
 
-- [ ] API keys (GEMINI_API_KEY)
-- [ ] Database passwords
-- [ ] Production .env file
+- [ ] LLM API keys (`LLM_API_KEY`)
 - [ ] Any sensitive configuration
+- [ ] Production `.env` file
 
-Use `.env` only for local development. In production, use:
-- **Render**: Environment Variables in dashboard
-- **Vercel**: Environment Variables in project settings
+Use `.env` only for local development. In production, use platform secrets:
+- **Render:** Environment Variables in dashboard
+- **Vercel:** Environment Variables in project settings
 
 ---
 
@@ -469,31 +519,39 @@ Use `.env` only for local development. In production, use:
 1. Go to Service Settings
 2. Environment Variables section
 3. Add each variable individually
-4. Select appropriate environment (Preview/Staging/Production)
+4. Select appropriate environment (Production)
+5. Redeploy service
 
 ### Vercel Environment Variables
 
 1. Project Settings → Environment Variables
 2. Add variable name and value
-3. Select environments: Production/Preview/Development
+3. Select environments: Production
 4. Save (automatically redeployed)
 
 ---
 
 ## Troubleshooting
 
-**Q: ValidationError: Extra inputs are not permitted**
-
-A: Unknown variables in .env. Only set variables defined in `Settings` class or remove unknown variables.
-
 **Q: CORS blocked from frontend**
 
-A: Check that current domain is in `CORS_ORIGINS` for active environment. Use `curl` to test CORS preflight.
+A: Check that frontend domain is in `CORS_ORIGINS` for active environment. Test with curl:
+```bash
+curl -i -X OPTIONS http://localhost:8000/api/v1/analysis
+```
 
 **Q: Wrong environment settings applied**
 
-A: Check `ENVIRONMENT` variable. Settings are selected based on this value, not the deployment platform.
+A: Verify `ENVIRONMENT` variable matches active environment. Settings are selected based on this value.
 
-**Q: Database connection refused**
+**Q: LLM API calls failing with 401**
 
-A: Verify `DATABASE_URL` format, credentials, and that database is running and accessible.
+A: Check `LLM_API_KEY` is set correctly and not expired. Verify with provider dashboard.
+
+**Q: Analysis taking too long**
+
+A: Increase `LLM_TIMEOUT` if consistently hitting timeout. Default 30s is usually sufficient.
+
+**Q: CORS errors in production**
+
+A: Ensure `CORS_ORIGINS` is exact match to frontend domain (no trailing slashes). Use exact domain: `https://example.com` not `https://example.com/`.
