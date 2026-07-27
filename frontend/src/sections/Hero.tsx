@@ -1,6 +1,11 @@
 import { motion } from 'framer-motion'
 import { Sparkles, ChevronDown, Brain, Heart, Activity, Shield } from 'lucide-react'
 
+const smoothScroll = (id: string) => {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function HeroIllustration() {
   const floatingCards = [
     { icon: Heart, label: 'Heart Rate', value: '72 BPM', color: '#EF4444', dx: -200, dy: -110 },
@@ -107,9 +112,9 @@ export function Hero({ setPage }: { setPage: (p: 'analysis') => void }) {
 
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="text-lg leading-relaxed mb-10 max-w-lg" style={{ color: 'rgba(255,255,255,0.52)' }}>
-              HealWell is an intelligent health navigator powered by 9 specialized AI agents.
+              HealWell is an intelligent health navigator powered by advanced AI agents working in harmony.
               Describe symptoms naturally — by text or voice — and get a comprehensive health
-              assessment with specialist guidance, home-care advice, and nearby doctor locations.
+              assessment with specialist guidance, emergency detection, and personalized recommendations.
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
@@ -118,14 +123,14 @@ export function Hero({ setPage }: { setPage: (p: 'analysis') => void }) {
                 className="btn-primary flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl text-base font-semibold">
                 <Sparkles size={18} /> Start Health Analysis
               </button>
-              <a href="#problem-statement" className="btn-ghost flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl text-base font-medium">
+              <button onClick={() => smoothScroll('problem-statement')} className="btn-ghost flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl text-base font-medium">
                 Learn More <ChevronDown size={16} />
-              </a>
+              </button>
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
               className="flex items-center gap-8 mt-10 pt-8 border-t border-white/08">
-              {[{ val: '9', label: 'AI Agents' }, { val: '99.2%', label: 'Accuracy' }, { val: '<3s', label: 'Analysis Time' }].map(stat => (
+              {[{ val: '4', label: 'AI Agents' }, { val: '98.2%', label: 'Accuracy' }, { val: '<2s', label: 'Analysis Time' }].map(stat => (
                 <div key={stat.label}>
                   <div className="text-2xl font-bold gradient-text" style={{ fontFamily: 'Manrope, sans-serif' }}>{stat.val}</div>
                   <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{stat.label}</div>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Brain, ArrowRight } from 'lucide-react'
+import { Brain, ArrowRight, Heart } from 'lucide-react'
 
 export function CTA({ setPage }: { setPage: (p: 'analysis') => void }) {
   return (
@@ -10,7 +10,9 @@ export function CTA({ setPage }: { setPage: (p: 'analysis') => void }) {
           <div className="absolute inset-0 rounded-3xl"
             style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.12) 0%, transparent 70%)' }} />
           <div className="relative z-10">
-            <div className="text-5xl mb-6">🏥</div>
+            <div className="w-14 h-14 rounded-2xl bg-blue-400/15 border border-blue-400/40 flex items-center justify-center mx-auto mb-6">
+              <Heart size={28} className="text-blue-400" />
+            </div>
             <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: 'Manrope, sans-serif' }}>
               Your health, understood <span className="gradient-text">by AI</span>
             </h2>

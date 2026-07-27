@@ -3,6 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Activity, Menu, X, History, Sparkles } from 'lucide-react'
 import { Page } from '../types'
 
+const smoothScroll = (id: string) => {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -31,11 +36,11 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
         </button>
 
         <div className="hidden md:flex items-center gap-1">
-          {['Problem', 'How It Works', 'Automation'].map(item => (
-            <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+          {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(item => (
+            <button key={item.id} onClick={() => smoothScroll(item.id)}
               className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
-              {item}
-            </a>
+              {item.label}
+            </button>
           ))}
         </div>
 
@@ -57,10 +62,9 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
         {menuOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }} className="md:hidden px-4 pb-4 pt-2 border-t border-white/06">
-            {['Problem', 'How It Works', 'Automation'].map(i => (
-              <a key={i} href={`#${i.toLowerCase().replace(/\s+/g, '-')}`}
-                className="block px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg"
-                onClick={() => setMenuOpen(false)}>{i}</a>
+            {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(i => (
+              <button key={i.id} onClick={() => { smoothScroll(i.id); setMenuOpen(false) }}
+                className="block w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">{i.label}</button>
             ))}
             <button onClick={() => { setPage('history'); setMenuOpen(false) }}
               className="w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">
