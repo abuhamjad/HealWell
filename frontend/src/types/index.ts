@@ -17,8 +17,8 @@ export interface AnalysisResult {
   lifestyle: string[]
   monitor: string[]
   agentOutputs: AgentOutput[]
-  warningSigns?: string[]
-  references?: string[]
+  warningSigns: string[]
+  references: string[]
 }
 
 export interface AgentOutput {

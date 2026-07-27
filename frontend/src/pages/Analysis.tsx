@@ -11,6 +11,15 @@ import { AnalysisResult, RiskLevel, AnalysisPhase } from '../types'
 import { RiskBadge } from '../components/RiskBadge'
 import { useAnalysis } from '../hooks/useAnalysis'
 
+interface SpeechRecognitionInstance {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  onresult: (event: Event) => void
+  start(): void
+  stop(): void
+}
+
 const PROCESSING_STEPS = [
   { label: 'Understanding Symptoms', icon: Brain, color: '#3B82F6' },
   { label: 'Assessing Risk Level', icon: Activity, color: '#FACC15' },
@@ -27,7 +36,7 @@ export function Analysis() {
   const [symptoms, setSymptoms] = useState('')
   const [isRecording, setIsRecording] = useState(false)
 
-  const recRef = useRef<any>(null)
+  const recRef = useRef<SpeechRecognitionInstance | null>(null)
 
   const startRecording = useCallback(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -175,7 +184,7 @@ export function Analysis() {
                 </div>
 
                 <div className="glass rounded-xl p-4 mt-3 flex items-start gap-3">
-                  <Info size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <Info size={14} className="text-yellow-400 mt-0.5 shrink-0" />
                   <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.38)' }}>
                     <span className="text-yellow-400 font-medium">Not a medical diagnosis.</span> HealWell provides general health guidance only.
                     Always consult a qualified healthcare professional for medical decisions.
@@ -185,7 +194,7 @@ export function Analysis() {
 
                 {apiError && (
                   <div className="glass rounded-xl p-4 mt-3 flex items-start gap-3 border border-red-400/30 bg-red-400/08">
-                    <AlertTriangle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
+                    <AlertTriangle size={14} className="text-red-400 mt-0.5 shrink-0" />
                     <p className="text-xs leading-relaxed text-red-400">{apiError}</p>
                   </div>
                 )}
@@ -218,7 +227,7 @@ export function Analysis() {
                   <motion.div key={step.label}
                     initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
                     className={`flex items-center gap-3 p-3 rounded-xl transition-smooth ${state === 'active' ? 'glass border border-blue-400/30' : state === 'done' ? 'opacity-55' : 'opacity-22'}`}>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{
                         background: state === 'done' ? 'rgba(34,197,94,0.14)' : state === 'active' ? `${step.color}18` : 'rgba(255,255,255,0.04)',
                         border: `1px solid ${state === 'done' ? 'rgba(34,197,94,0.38)' : state === 'active' ? `${step.color}48` : 'rgba(255,255,255,0.08)'}`
@@ -252,7 +261,7 @@ export function Analysis() {
             {result.emergency && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                 className="glass rounded-2xl p-5 border border-red-500/48 bg-red-500/08 mb-6 flex items-start gap-4">
-                <AlertTriangle size={20} className="text-red-400 flex-shrink-0" />
+                <AlertTriangle size={20} className="text-red-400 shrink-0" />
                 <div className="flex-1">
                   <div className="font-bold text-red-400 mb-1">Emergency Warning Detected</div>
                   <div className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>{result.emergencyNote}</div>
@@ -304,7 +313,7 @@ export function Analysis() {
                   <ul className="space-y-2">
                     {col.items.map((item, ii) => (
                       <li key={ii} className="flex items-start gap-2 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: col.color, opacity: 0.65 }} />
+                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: col.color, opacity: 0.65 }} />
                         {item}
                       </li>
                     ))}
@@ -323,7 +332,7 @@ export function Analysis() {
                 <ul className="space-y-2">
                   {result.warningSigns.map((sign, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#EF4444', opacity: 0.65 }} />
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#EF4444', opacity: 0.65 }} />
                       {sign}
                     </li>
                   ))}
@@ -341,7 +350,7 @@ export function Analysis() {
                 <ul className="space-y-2">
                   {result.references.map((ref, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#8B5CF6', opacity: 0.65 }} />
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#8B5CF6', opacity: 0.65 }} />
                       {ref}
                     </li>
                   ))}
