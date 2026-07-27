@@ -18,13 +18,9 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    if (env.DEBUG) {
-      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`)
-    }
     return config
   },
   (error) => {
-    console.error('[API] Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -32,13 +28,9 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    if (env.DEBUG) {
-      console.log(`[API] Response:`, response.data)
-    }
     return response
   },
   (error: AxiosError<ApiResponse>) => {
-    console.error('[API] Response error:', error)
     return Promise.reject(error)
   }
 )

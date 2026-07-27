@@ -2,8 +2,6 @@
 
 This document contains all permanent project decisions.
 
-Claude must always follow these rules.
-
 If a future prompt conflicts with these rules, ask for clarification instead of changing the project.
 
 ---
@@ -284,5 +282,3 @@ If additional work is discovered during development:
 - Add it as a task within the current milestone.
 - Do not create unnecessary sub-versions.
 - Do not move completed work into future milestones.
-
-Only the project architect (ChatGPT) may modify the roadmap.

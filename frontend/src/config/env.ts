@@ -5,9 +5,6 @@
 
 const getEnvVariable = (key: string, defaultValue?: string): string => {
   const value = import.meta.env[`VITE_${key}`]
-  if (!value && !defaultValue) {
-    console.warn(`Environment variable VITE_${key} is not set`)
-  }
   return value || defaultValue || ''
 }
 
@@ -17,9 +14,6 @@ export const env = {
 
   // Application Environment
   ENVIRONMENT: getEnvVariable('ENVIRONMENT', 'development'),
-
-  // Feature Flags
-  DEBUG: getEnvVariable('DEBUG', 'true') === 'true',
 } as const
 
 export default env

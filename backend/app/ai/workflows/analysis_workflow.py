@@ -23,7 +23,6 @@ class AnalysisWorkflow:
             "user_input": input_data.symptoms,
             "analysis_input": input_data,
             "symptom_analysis": {},
-            "doctor_recommendations": [],
             "workflow_status": "started",
             "current_step": "initialization",
             "errors": [],

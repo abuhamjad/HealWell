@@ -44,24 +44,11 @@ class Settings(BaseSettings):
     API_HEALTH_CHECK_PATH: str = "/health"
     API_PREFIX: str = "/api/v1"
 
-    # ========== AI/GEMINI CONFIGURATION (v0.7+) ==========
-    GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
-    AI_TIMEOUT: int = 30
-    AI_MAX_RETRIES: int = 3
-    AI_TEMPERATURE: float = 0.7
-
-    # ========== LLM PROVIDER CONFIGURATION (v0.7+) ==========
-    LLM_PROVIDER: str = "openai"  # openai | gemini | custom
-    LLM_BASE_URL: str = "https://api.openai.com/v1"  # OpenAI-compatible endpoint
-    LLM_API_KEY: str = ""  # API key for the provider
-    LLM_MODEL: str = "gpt-4"  # Model name
-    LLM_TIMEOUT: int = 30  # Request timeout in seconds
-
-    # ========== DATABASE CONFIGURATION (v0.9+) ==========
-    DATABASE_URL: str = ""
-    DATABASE_POOL_SIZE: int = 5
-    DATABASE_MAX_OVERFLOW: int = 10
+    # ========== AI/OPENAI CONFIGURATION ==========
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = "gpt-4"
+    LLM_TIMEOUT: int = 30
 
     # ========== LOGGING CONFIGURATION ==========
     LOG_LEVEL: str = "INFO"

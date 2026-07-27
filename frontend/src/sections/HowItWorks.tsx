@@ -1,15 +1,13 @@
 import { motion } from 'framer-motion'
-import { MessageSquare, Mic, Brain, FileText, Activity, Stethoscope, MapPin, Download } from 'lucide-react'
+import { MessageSquare, Mic, Brain, Activity, Stethoscope, Download } from 'lucide-react'
 
 const steps = [
   { step: '1', title: 'Describe Symptoms', desc: 'Type or speak naturally about how you\'re feeling', icon: MessageSquare },
   { step: '2', title: 'Speech-to-Text', desc: 'Voice converted to data with medical vocabulary support', icon: Mic },
   { step: '3', title: 'Symptom Analysis', desc: 'AI analyzes symptoms contextually and identifies patterns', icon: Brain },
-  { step: '4', title: 'Medical History', desc: 'Your health records integrated into assessment', icon: FileText },
-  { step: '5', title: 'Risk Assessment', desc: 'Low, Moderate, or High risk determination with reasoning', icon: Activity },
-  { step: '6', title: 'Specialist Recommendation', desc: 'Best-match healthcare provider specialty identified', icon: Stethoscope },
-  { step: '7', title: 'Nearby Doctors', desc: 'Verified local care providers with ratings and distance', icon: MapPin },
-  { step: '8', title: 'Health Report', desc: 'Comprehensive PDF report ready for download', icon: Download },
+  { step: '4', title: 'Risk Assessment', desc: 'Low, Moderate, or High risk determination with reasoning', icon: Activity },
+  { step: '5', title: 'Specialist Recommendation', desc: 'Best-match healthcare provider specialty identified', icon: Stethoscope },
+  { step: '6', title: 'Health Report', desc: 'Comprehensive PDF report ready for download', icon: Download },
 ]
 
 export function HowItWorks() {

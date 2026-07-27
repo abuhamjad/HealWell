@@ -9,12 +9,6 @@ export const API_ENDPOINTS = {
 
   // Analysis
   ANALYSIS: '/api/v1/analysis',
-
-  // History
-  HISTORY: '/api/v1/history',
-
-  // Doctors
-  DOCTORS: '/api/v1/doctors',
 } as const
 
 export default API_ENDPOINTS

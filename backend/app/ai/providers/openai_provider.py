@@ -333,57 +333,14 @@ class OpenAIProvider(BaseProvider):
             logger.error(f"Health report generation failed: {e}")
             raise
 
+
     async def analyze_symptoms(self, input_data: AnalysisInput) -> AnalysisResult:
-        """
-        Analyze symptoms using OpenAI-compatible API.
-
-        Placeholder implementation returns mock data.
-        TODO: Implement actual LLM calls via prompts and agents.
-        """
-        # Placeholder logic
-        risk_level = "moderate"
-        if input_data.symptoms:
-            if any(keyword in input_data.symptoms.lower() for keyword in ["chest", "emergency", "collapse"]):
-                risk_level = "high"
-            elif any(keyword in input_data.symptoms.lower() for keyword in ["pain", "fever", "headache"]):
-                risk_level = "moderate"
-            else:
-                risk_level = "low"
-
-        return AnalysisResult(
-            analysis_id=str(uuid.uuid4()),
-            risk_assessment=RiskAssessment(
-                risk_level=risk_level,
-                confidence=87.5,
-                reasoning="Analysis pending implementation",
-                warning_signs=[],
-            ),
-            specialist_recommendation=SpecialistRecommendation(
-                specialist="General Practitioner",
-                reasoning="Recommendation pending implementation",
-                urgency="1-2 weeks",
-            ),
-            health_report=HealthReport(
-                summary="Health assessment completed.",
-                home_care=["Rest", "Stay hydrated"],
-                lifestyle=["Maintain healthy habits"],
-                monitoring=["Monitor symptoms"],
-            ),
-            emergency_alert=False,
-        )
+        """Analyze symptoms and return assessment (delegates to workflow)."""
+        raise NotImplementedError("Use analyze_symptoms_structured instead")
 
     async def generate_report(self, analysis_result: AnalysisResult) -> Dict[str, Any]:
-        """
-        Generate detailed health report.
-
-        Placeholder implementation.
-        TODO: Implement report generation via LLM.
-        """
-        return {
-            "report_id": str(uuid.uuid4()),
-            "analysis_id": analysis_result.analysis_id,
-            "status": "Report generation pending implementation",
-        }
+        """Generate a detailed health report (delegates to workflow)."""
+        raise NotImplementedError("Use generate_report_structured instead")
 
     async def health_check(self) -> bool:
         """Check provider health status."""

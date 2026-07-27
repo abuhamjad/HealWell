@@ -1,4 +1,4 @@
-export type Page = 'home' | 'analysis' | 'history'
+export type Page = 'home' | 'analysis'
 export type RiskLevel = 'low' | 'moderate' | 'high'
 export type AnalysisPhase = 'idle' | 'processing' | 'complete'
 
@@ -16,17 +16,9 @@ export interface AnalysisResult {
   homeCare: string[]
   lifestyle: string[]
   monitor: string[]
-  nearbyDoctors: Doctor[]
   agentOutputs: AgentOutput[]
-}
-
-export interface Doctor {
-  name: string
-  hospital: string
-  distance: string
-  rating: number
-  specialty: string
-  available: boolean
+  warningSigns?: string[]
+  references?: string[]
 }
 
 export interface AgentOutput {

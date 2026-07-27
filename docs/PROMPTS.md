@@ -68,8 +68,6 @@ Ready for Next Milestone
 
 # 2. FIX PROMPT
 
-Use only after ChatGPT review.
-
 ## Issues
 
 <Issue 1>

@@ -18,7 +18,7 @@ export function Footer({ setPage }: { setPage: (p: Page) => void }) {
             <span className="text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>IBM SkillsBuild · SDG 3</span>
           </div>
           <div className="flex items-center gap-4 text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>
-            {(['home', 'analysis', 'history'] as const).map(p => (
+            {(['home', 'analysis'] as const).map(p => (
               <button key={p} onClick={() => setPage(p)} className="capitalize hover:text-white/65 transition-smooth">{p}</button>
             ))}
           </div>

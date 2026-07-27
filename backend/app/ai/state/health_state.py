@@ -18,7 +18,6 @@ class HealthAnalysisState(TypedDict, total=False):
     symptom_analysis: dict[str, Any]
     risk_assessment: RiskAssessment
     specialist_recommendation: SpecialistRecommendation
-    doctor_recommendations: List[dict[str, Any]]
     health_report: HealthReport
     workflow_status: str
     current_step: str

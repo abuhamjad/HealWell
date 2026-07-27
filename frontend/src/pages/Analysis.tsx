@@ -1,42 +1,31 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useCallback, useRef } from 'react'
+import { motion } from 'framer-motion'
 import {
   Activity, Brain, Download, FileText,
-  Heart, Mic, MicOff, Navigation, Phone, Search,
-  Shield, User, AlertTriangle, CheckCircle, Clock,
-  Network, Stethoscope, MapPin, X, Menu,
-  ArrowRight, Sparkles, Eye, Calendar,
+  Heart, Mic, MicOff, AlertTriangle, CheckCircle,
+  Stethoscope, ArrowRight, Eye,
   TrendingUp, MessageSquare, RotateCcw,
-  ChevronDown, Info, Loader2, Bot, History,
-  Share2, ChevronLeft, Building2, Car
+  Info, Loader2, Bot, ChevronLeft
 } from 'lucide-react'
-import { AnalysisResult, Doctor, RiskLevel, AnalysisPhase } from '../types'
-import { RiskBadge, StarRating } from '../components/RiskBadge'
+import { AnalysisResult, RiskLevel, AnalysisPhase } from '../types'
+import { RiskBadge } from '../components/RiskBadge'
 import { useAnalysis } from '../hooks/useAnalysis'
 
 const PROCESSING_STEPS = [
   { label: 'Understanding Symptoms', icon: Brain, color: '#3B82F6' },
-  { label: 'Reading Medical History', icon: FileText, color: '#8B5CF6' },
   { label: 'Assessing Risk Level', icon: Activity, color: '#FACC15' },
   { label: 'Detecting Warning Signs', icon: AlertTriangle, color: '#EF4444' },
   { label: 'Selecting Specialist', icon: Stethoscope, color: '#22C55E' },
-  { label: 'Finding Nearby Doctors', icon: MapPin, color: '#F97316' },
   { label: 'Generating Health Report', icon: FileText, color: '#A855F7' },
 ]
 
 export function Analysis() {
-  const { createAnalysis, loading: apiLoading, error: apiError } = useAnalysis()
+  const { createAnalysis, error: apiError } = useAnalysis()
   const [phase, setPhase] = useState<AnalysisPhase>('idle')
   const [currentStep, setCurrentStep] = useState(0)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [symptoms, setSymptoms] = useState('')
   const [isRecording, setIsRecording] = useState(false)
-  const [expandedAgent, setExpandedAgent] = useState<number | null>(null)
-  const [formData, setFormData] = useState({
-    name: '', age: '', gender: 'male', height: '', weight: '',
-    diseases: '', medications: '', allergies: '',
-    smoking: 'no', alcohol: 'no', exercise: 'moderate', stress: 'moderate',
-  })
 
   const recRef = useRef<any>(null)
 
@@ -93,7 +82,6 @@ export function Analysis() {
           homeCare: (analysisData?.health_report?.home_care?.length) ? analysisData.health_report.home_care : ['Rest adequately', 'Stay well-hydrated', 'Monitor symptoms', 'Follow specialist recommendations'],
           lifestyle: (analysisData?.health_report?.lifestyle?.length) ? analysisData.health_report.lifestyle : ['Maintain healthy habits', 'Manage stress', 'Regular exercise', 'Adequate sleep'],
           monitor: (analysisData?.health_report?.monitoring?.length) ? analysisData.health_report.monitoring : ['Symptom progression', 'Any new symptoms', 'Severity changes', 'Follow-up care'],
-          nearbyDoctors: [],
           agentOutputs: [
             {
               agent: 'Risk Assessment',
@@ -128,7 +116,6 @@ export function Analysis() {
 
       setPhase('complete')
     } catch (error) {
-      console.error('Analysis error:', error)
       alert('Failed to complete analysis. Please try again.')
       setPhase('idle')
     }
@@ -141,7 +128,7 @@ export function Analysis() {
       <div className="max-w-6xl mx-auto px-4">
         {phase === 'idle' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="text-center mb-12">
+            <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-blue-400/25 text-blue-400 text-sm font-medium mb-6">
                 <Brain size={14} /> AI Health Analysis
               </div>
@@ -150,68 +137,11 @@ export function Analysis() {
               </h1>
               <p className="max-w-lg mx-auto text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.48)' }}>
                 Fill in your details and describe your symptoms in natural language.
-                Our 9-agent LangGraph system will analyze your health in real time.
+                Our AI health analysis system will assess your condition in real time.
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-[360px_1fr] gap-6">
-              <div className="space-y-4">
-                <div className="glass rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <User size={15} className="text-blue-400" />
-                    <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Patient Information</span>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { key: 'name', label: 'Full Name', placeholder: 'John Doe', type: 'text' },
-                      { key: 'age', label: 'Age', placeholder: '28', type: 'number' },
-                      { key: 'height', label: 'Height (cm)', placeholder: '175', type: 'number' },
-                      { key: 'weight', label: 'Weight (kg)', placeholder: '72', type: 'number' },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.label}</label>
-                        <input type={f.type} placeholder={f.placeholder}
-                          value={(formData as any)[f.key]}
-                          onChange={e => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
-                          className="w-full glass rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 outline-none border border-white/08 focus:border-blue-400/40 bg-transparent transition-smooth" />
-                      </div>
-                    ))}
-                    <div>
-                      <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>Gender</label>
-                      <select value={formData.gender} onChange={e => setFormData(d => ({ ...d, gender: e.target.value }))}
-                        className="w-full glass rounded-xl px-3 py-2 text-sm text-white bg-[#0B0B0B] outline-none border border-white/08 focus:border-blue-400/40 transition-smooth">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText size={15} className="text-purple-400" />
-                    <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Medical History</span>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { key: 'diseases', label: 'Existing Conditions', placeholder: 'Diabetes, Hypertension...' },
-                      { key: 'medications', label: 'Current Medications', placeholder: 'Metformin 500mg...' },
-                      { key: 'allergies', label: 'Known Allergies', placeholder: 'Penicillin, Latex...' },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-[11px] font-medium mb-1.5 block" style={{ color: 'rgba(255,255,255,0.35)' }}>{f.label}</label>
-                        <input type="text" placeholder={f.placeholder}
-                          value={(formData as any)[f.key]}
-                          onChange={e => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
-                          className="w-full glass rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 outline-none border border-white/08 focus:border-purple-400/40 bg-transparent transition-smooth" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col">
+            <div className="flex flex-col lg:max-w-2xl mx-auto">
                 <div className="glass rounded-2xl p-6 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -222,8 +152,8 @@ export function Analysis() {
                   </div>
 
                   <textarea value={symptoms} onChange={e => setSymptoms(e.target.value)}
-                    placeholder={"Describe your symptoms..."}
-                    className="flex-1 bg-transparent text-white/82 placeholder-white/18 resize-none outline-none text-sm leading-relaxed min-h-[300px]"
+                    placeholder={"Describe your symptoms...\n\nExamples:\n• Fever with sore throat for 3 days\n• Persistent headache and dizziness\n• Chest pain after exercise\n• Dry cough and fatigue\n• Stomach pain after meals"}
+                    className="flex-1 bg-transparent text-white/82 placeholder-white/18 resize-none outline-none text-sm leading-relaxed min-h-[300px] border border-white/08 rounded-xl p-3 focus:border-cyan-400/40 transition-smooth"
                     style={{ fontFamily: 'Inter, sans-serif' }} />
 
                   <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/06">
@@ -260,7 +190,6 @@ export function Analysis() {
                   </div>
                 )}
               </div>
-            </div>
           </motion.div>
         )}
 
@@ -386,7 +315,7 @@ export function Analysis() {
 
             {result.warningSigns?.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
-                className="glass rounded-2xl p-5">
+                className="glass rounded-2xl p-5 mb-6">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle size={14} style={{ color: '#EF4444' }} />
                   <span className="font-semibold text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>Warning Signs</span>
