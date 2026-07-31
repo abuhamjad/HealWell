@@ -39,8 +39,9 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
 
         {page === 'home' && (
           <div className="hidden md:flex items-center gap-1">
-            {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(item => (
-              <button key={item.id} onClick={() => smoothScroll(item.id)}
+            {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }, { label: 'About', action: 'about' }].map(item => (
+              <button key={item.label}
+                onClick={() => 'action' in item ? setPage(item.action as Page) : smoothScroll(item.id as string)}
                 className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
                 {item.label}
               </button>
@@ -48,12 +49,14 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
           </div>
         )}
 
-        <div className="hidden md:flex items-center gap-2">
-          <button onClick={() => setPage('about')}
-            className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
-            About
-          </button>
-        </div>
+        {page !== 'home' && (
+          <div className="hidden md:flex items-center gap-1">
+            <button onClick={() => setPage('about')}
+              className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
+              About
+            </button>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <button onClick={() => setPage('analysis')}
