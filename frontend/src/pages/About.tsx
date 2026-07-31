@@ -4,6 +4,10 @@ import {
   Server, Cloud, HeartPulse, Workflow, ShieldCheck, UserRound,
   TriangleAlert
 } from 'lucide-react'
+import { useState } from 'react'
+import abuImg from '../assets/contributors/abu.png'
+import adarshImg from '../assets/contributors/adrash.png'
+import amitImg from '../assets/contributors/amit.png'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,11 +42,13 @@ export function About() {
     {
       name: 'Abu Huraira',
       role: 'Team Lead',
+      image: abuImg,
       description: 'Designed the overall system architecture, developed the backend, established the application design system, implemented API integration, and oversaw project testing.'
     },
     {
       name: 'Adarsh Kumar',
       role: 'Frontend & System Integration',
+      image: adarshImg,
       description: 'Developed the React frontend and integrated the frontend with backend services to ensure seamless communication across the application.'
     },
     {
@@ -53,6 +59,7 @@ export function About() {
     {
       name: 'Amit Rawat',
       role: 'Quality Assurance',
+      image: amitImg,
       description: 'Performed quality assurance testing, validated application workflows, reported issues, and verified functionality across development milestones.'
     }
   ]
@@ -302,6 +309,8 @@ export function About() {
             <div className="grid md:grid-cols-2 gap-6">
               {contributors.map((contributor, idx) => {
                 const roleColor = getRoleColor(contributor.role)
+                const [imageError, setImageError] = useState(false)
+
                 return (
                   <motion.div
                     key={idx}
@@ -309,11 +318,23 @@ export function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.1 }}
-                    className="glass rounded-2xl p-6 border border-white/08">
+                    className="glass rounded-2xl p-6 border border-white/08 transition-transform duration-300 hover:scale-105">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))' }}>
-                        <UserRound size={20} className="text-blue-400" />
+                      <div className="shrink-0 w-12 h-12 rounded-full p-0.5 flex items-center justify-center"
+                        style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)' }}>
+                        {contributor.image && !imageError ? (
+                          <img
+                            src={contributor.image}
+                            alt={contributor.name}
+                            className="w-11 h-11 rounded-full object-cover"
+                            onError={() => setImageError(true)}
+                          />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))' }}>
+                            <UserRound size={18} className="text-blue-400" />
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h3 className="font-bold text-base" style={{ fontFamily: 'Manrope, sans-serif' }}>
