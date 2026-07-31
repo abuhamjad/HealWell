@@ -39,12 +39,22 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
 
         {page === 'home' && (
           <div className="hidden md:flex items-center gap-1">
-            {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(item => (
-              <button key={item.id} onClick={() => smoothScroll(item.id)}
+            {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }, { label: 'About', action: 'about' }].map(item => (
+              <button key={item.label}
+                onClick={() => 'action' in item ? setPage(item.action as Page) : smoothScroll(item.id as string)}
                 className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
                 {item.label}
               </button>
             ))}
+          </div>
+        )}
+
+        {page !== 'home' && (
+          <div className="hidden md:flex items-center gap-1">
+            <button onClick={() => setPage('about')}
+              className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
+              About
+            </button>
           </div>
         )}
 
@@ -62,6 +72,8 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
         {menuOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }} className="md:hidden px-4 pb-4 pt-2 border-t border-white/06">
+            <button onClick={() => { setPage('about'); setMenuOpen(false) }}
+              className="block w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">About</button>
             {page === 'home' && (
               <>
                 {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(i => (
