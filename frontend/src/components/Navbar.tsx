@@ -48,6 +48,13 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
           </div>
         )}
 
+        <div className="hidden md:flex items-center gap-2">
+          <button onClick={() => setPage('about')}
+            className="px-3 py-1.5 text-sm text-white/55 hover:text-white rounded-lg hover:bg-white/05 transition-smooth">
+            About
+          </button>
+        </div>
+
         <div className="flex items-center gap-2">
           <button onClick={() => setPage('analysis')}
             className="btn-primary flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-xl font-semibold">
@@ -62,6 +69,8 @@ export function NavBar({ page, setPage }: { page: Page; setPage: (p: Page) => vo
         {menuOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }} className="md:hidden px-4 pb-4 pt-2 border-t border-white/06">
+            <button onClick={() => { setPage('about'); setMenuOpen(false) }}
+              className="block w-full text-left px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/05 rounded-lg">About</button>
             {page === 'home' && (
               <>
                 {[{ label: 'Problem', id: 'problem-statement' }, { label: 'How It Works', id: 'how-it-works' }, { label: 'Automation', id: 'automation' }].map(i => (

@@ -4,6 +4,7 @@ import { Page } from './types'
 import { NavBar } from './components/Navbar'
 import { Home } from './pages/Home'
 import { Analysis } from './pages/Analysis'
+import { About } from './pages/About'
 import { Footer } from './sections/Footer'
 import { BackgroundOrbs } from './utils/BackgroundOrbs'
 
@@ -28,6 +29,11 @@ export default function App() {
           {page === 'analysis' && (
             <motion.div key="analysis" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
               <Analysis />
+            </motion.div>
+          )}
+          {page === 'about' && (
+            <motion.div key="about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+              <About />
             </motion.div>
           )}
         </AnimatePresence>
